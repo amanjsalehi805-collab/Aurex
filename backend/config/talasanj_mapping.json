@@ -1,0 +1,45 @@
+{
+  "items_path": "prices",
+  "assets": {
+    "usd_free_irt": {
+      "kind": "currency",
+      "market": "free",
+      "unit": "IRT",
+      "match_field": "name_fa",
+      "match_value": "دلار تهران",
+      "price_field": "price",
+      "previous_field": null,
+      "timestamp_field": "updated_at"
+    },
+    "gold18_irt": {
+      "kind": "gold",
+      "market": "free",
+      "unit": "IRT",
+      "match_field": "name_fa",
+      "match_value": "طلای ۱۸ عیار، هر گرم",
+      "price_field": "price",
+      "previous_field": "prev_close",
+      "timestamp_field": null
+    },
+    "coin_irt": {
+      "kind": "coin",
+      "market": "free",
+      "unit": "IRT",
+      "match_field": "name_fa",
+      "match_value": "سکه تمام",
+      "price_field": "price",
+      "previous_field": null,
+      "timestamp_field": "updated_at"
+    },
+    "gold_oz_usd": {
+      "kind": "gold",
+      "market": "global",
+      "unit": "USD",
+      "match_field": "name_fa",
+      "match_value": "اونس جهانی طلا",
+      "price_field": "price",
+      "previous_field": null,
+      "timestamp_field": null
+    }
+  }
+}
