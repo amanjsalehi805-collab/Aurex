@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">لەودیوی بازاڕەکانەوە</string>
+    <string name="nav_dashboard">داشبۆرد</string>
+    <string name="nav_settings">ڕێکخستنەکان</string>
+    <string name="settings_theme">ڕووکار</string>
+    <string name="settings_language">زمان</string>
+    <string name="section_iran">بازاڕی ئێران</string>
+    <string name="section_global">بازاڕە جیهانییەکان</string>
+    <string name="asset_usd_free">دۆلاری ئەمریکی (بازاڕی ئازاد)</string>
+    <string name="asset_eur_free">یۆرۆ (بازاڕی ئازاد)</string>
+    <string name="asset_gold18">زێڕی ١٨ عەیار</string>
+    <string name="asset_coin">سکەی زێڕ</string>
+    <string name="asset_tse_index">پێوەری بۆرسی تاران</string>
+    <string name="asset_global_gold">زێڕ (ئۆنسی جیهانی)</string>
+    <string name="asset_global_silver">زیو (ئۆنسی جیهانی)</string>
+    <string name="no_data_title">هیچ داتایەک بەردەست نییە</string>
+    <string name="no_data_body">هێشتا هیچ سەرچاوەیەکی داتای پشتڕاستکراو نەبەستراوەتەوە. نرخەکان تەنها کاتێک پیشان دەدرێن کە لە سەرچاوەیەکی پشتڕاستکراو بن.</string>
+</resources>

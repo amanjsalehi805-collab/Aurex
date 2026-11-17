@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lang_en" translatable="false">English</string>
+    <string name="lang_fa" translatable="false">فارسی</string>
+    <string name="lang_ckb" translatable="false">کوردیی سۆرانی</string>
+    <string name="theme_midnight" translatable="false">Midnight Professional</string>
+    <string name="theme_obsidian" translatable="false">Obsidian Gold</string>
+    <string name="theme_arctic" translatable="false">Arctic Light</string>
+    <string name="theme_cyber" translatable="false">Cyber Neon</string>
+    <string name="theme_forest" translatable="false">Forest Emerald</string>
+</resources>

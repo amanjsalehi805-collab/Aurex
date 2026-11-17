@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">فراتر از بازارها</string>
+    <string name="nav_dashboard">داشبورد</string>
+    <string name="nav_settings">تنظیمات</string>
+    <string name="settings_theme">پوسته</string>
+    <string name="settings_language">زبان</string>
+    <string name="section_iran">بازار ایران</string>
+    <string name="section_global">بازارهای جهانی</string>
+    <string name="asset_usd_free">دلار آمریکا (بازار آزاد)</string>
+    <string name="asset_eur_free">یورو (بازار آزاد)</string>
+    <string name="asset_gold18">طلای ۱۸ عیار</string>
+    <string name="asset_coin">سکه طلا</string>
+    <string name="asset_tse_index">شاخص بورس تهران</string>
+    <string name="asset_global_gold">طلا (اونس جهانی)</string>
+    <string name="asset_global_silver">نقره (اونس جهانی)</string>
+    <string name="no_data_title">داده‌ای در دسترس نیست</string>
+    <string name="no_data_body">هنوز هیچ منبع داده تأییدشده‌ای متصل نشده است. قیمت‌ها فقط زمانی نمایش داده می‌شوند که از منبعی تأییدشده باشند.</string>
+</resources>

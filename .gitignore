@@ -1,0 +1,12 @@
+.env
+*.keystore
+*.jks
+local.properties
+keystore.properties
+build/
+.gradle/
+.idea/
+__pycache__/
+.pytest_cache/
+.venv/
+backend/config/talasanj_raw*.json
