@@ -83,4 +83,12 @@
     <string name="placeholder_ai_body">The AI assistant is not active yet. It will be built in a later phase.</string>
     <string name="placeholder_watchlist_title">Watchlist</string>
     <string name="placeholder_watchlist_body">Personal watchlists and asset tracking will be added in a later phase.</string>
+
+    <string name="watchlist_title">My Watchlist</string>
+    <string name="watchlist_empty">Your watchlist is empty.</string>
+    <string name="watchlist_empty_body">Add assets below to follow their market prices.</string>
+    <string name="watchlist_add">Add to watchlist</string>
+    <string name="watchlist_remove">Remove from watchlist</string>
+    <string name="watchlist_available">Available assets</string>
+    <string name="watchlist_added">Added to your watchlist</string>
 </resources>

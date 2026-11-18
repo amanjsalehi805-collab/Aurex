@@ -82,4 +82,12 @@
     <string name="placeholder_ai_body">یاریدەدەری ژیریی دەستکرد هێشتا چالاک نییە و لە قۆناغێکی داهاتوودا دروست دەکرێت.</string>
     <string name="placeholder_watchlist_title">چاودێری</string>
     <string name="placeholder_watchlist_body">لیستی کەسی و شوێنکەوتنی دارایی لە قۆناغێکی داهاتوودا زیاد دەکرێن.</string>
+
+    <string name="watchlist_title">چاودێریی من</string>
+    <string name="watchlist_empty">چاودێرییەکەت بەتاڵە.</string>
+    <string name="watchlist_empty_body">بۆ شوێنکەوتنی نرخی بازاڕ، دارایییەکانی خوارەوە زیاد بکە.</string>
+    <string name="watchlist_add">زیادکردن بۆ چاودێری</string>
+    <string name="watchlist_remove">سڕینەوە لە چاودێری</string>
+    <string name="watchlist_available">دارایییە بەردەستەکان</string>
+    <string name="watchlist_added">بۆ چاودێری زیاد کرا</string>
 </resources>

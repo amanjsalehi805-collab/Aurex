@@ -82,4 +82,12 @@
     <string name="placeholder_ai_body">دستیار هوش مصنوعی هنوز فعال نیست و در مرحله‌ای بعدی ساخته می‌شود.</string>
     <string name="placeholder_watchlist_title">دیده‌بان</string>
     <string name="placeholder_watchlist_body">فهرست‌های شخصی و پیگیری دارایی در مرحله‌ای بعدی اضافه می‌شود.</string>
+
+    <string name="watchlist_title">دیده‌بان من</string>
+    <string name="watchlist_empty">دیده‌بان شما خالی است.</string>
+    <string name="watchlist_empty_body">برای پیگیری قیمت بازار، دارایی‌های زیر را اضافه کنید.</string>
+    <string name="watchlist_add">افزودن به دیده‌بان</string>
+    <string name="watchlist_remove">حذف از دیده‌بان</string>
+    <string name="watchlist_available">دارایی‌های موجود</string>
+    <string name="watchlist_added">به دیده‌بان اضافه شد</string>
 </resources>

@@ -24,6 +24,7 @@ class PreferencesRepository(private val context: Context) {
     private val themeKey = stringPreferencesKey("theme")
     private val quotesCacheKey = stringPreferencesKey("quotes_cache")
     private val quotesCacheTimeKey = longPreferencesKey("quotes_cache_time")
+    private val favoritesKey = stringPreferencesKey("favorites")
 
     val theme: Flow<ThemeId> = context.dataStore.data.map { prefs ->
         prefs[themeKey]?.let {
@@ -31,15 +32,44 @@ class PreferencesRepository(private val context: Context) {
         } ?: ThemeId.MIDNIGHT
     }
 
+    val favorites: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+        runCatching {
+            val json = JSONArray(prefs[favoritesKey] ?: "[]")
+            buildSet {
+                for (i in 0 until json.length()) {
+                    val id = json.optString(i)
+                    if (id.isNotBlank()) add(id)
+                }
+            }
+        }.getOrDefault(emptySet())
+    }
+
     suspend fun setTheme(theme: ThemeId) {
         context.dataStore.edit { it[themeKey] = theme.name }
+    }
+
+    suspend fun setFavorite(assetId: String, favorite: Boolean) {
+        context.dataStore.edit { prefs ->
+            val current = runCatching {
+                val json = JSONArray(prefs[favoritesKey] ?: "[]")
+                buildSet {
+                    for (i in 0 until json.length()) {
+                        json.optString(i).takeIf { it.isNotBlank() }?.let(::add)
+                    }
+                }
+            }.getOrDefault(emptySet())
+
+            val updated = current.toMutableSet()
+            if (favorite) updated.add(assetId) else updated.remove(assetId)
+
+            prefs[favoritesKey] = JSONArray(updated.sorted()).toString()
+        }
     }
 
     suspend fun saveQuotesCache(quotes: List<MarketQuote>) {
         if (quotes.isEmpty()) return
 
         val json = JSONArray()
-
         quotes.forEach { quote ->
             json.put(JSONObject().apply {
                 put("assetId", quote.assetId)
@@ -81,18 +111,20 @@ class PreferencesRepository(private val context: Context) {
                     }
                 }
 
-                add(MarketQuote(
-                    assetId = item.getString("assetId"),
-                    price = price,
-                    unit = item.optString("unit", ""),
-                    changePct = if (item.isNull("changePct")) null
+                add(
+                    MarketQuote(
+                        assetId = item.getString("assetId"),
+                        price = price,
+                        unit = item.optString("unit", ""),
+                        changePct = if (item.isNull("changePct")) null
                         else item.optDouble("changePct"),
-                    freshness = item.optString("freshness", "unknown"),
-                    source = item.optString("source", "Unknown"),
-                    sourceTimestamp = item.cacheStringOrNull("sourceTimestamp"),
-                    fetchedAt = item.cacheStringOrNull("fetchedAt"),
-                    flags = flags
-                ))
+                        freshness = item.optString("freshness", "unknown"),
+                        source = item.optString("source", "Unknown"),
+                        sourceTimestamp = item.cacheStringOrNull("sourceTimestamp"),
+                        fetchedAt = item.cacheStringOrNull("fetchedAt"),
+                        flags = flags
+                    )
+                )
             }
         }
 

@@ -11,11 +11,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class DashboardState(
     val quotes: Map<String, MarketQuote> = emptyMap(),
+    val favorites: Set<String> = emptySet(),
     val loading: Boolean = true,
     val error: String? = null,
     val lastLoadedAtMillis: Long? = null,
@@ -32,6 +34,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private var job: Job? = null
 
     init {
+        viewModelScope.launch {
+            preferences.favorites.collect { favorites ->
+                _state.update { it.copy(favorites = favorites) }
+            }
+        }
+
         viewModelScope.launch {
             try {
                 val cached = preferences.loadQuotesCache()
@@ -54,6 +62,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun toggleFavorite(assetId: String) {
+        val currentlyFavorite = assetId in _state.value.favorites
+        viewModelScope.launch {
+            preferences.setFavorite(assetId, !currentlyFavorite)
+        }
+    }
+
     fun refresh() {
         if (job?.isActive == true) return
 
@@ -62,7 +77,6 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
             try {
                 val quotes = repository.fetchQuotes()
-
                 if (quotes.isNotEmpty()) {
                     preferences.saveQuotesCache(quotes)
                 }

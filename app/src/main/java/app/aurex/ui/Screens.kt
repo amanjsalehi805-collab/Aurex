@@ -109,10 +109,9 @@ fun AurexApp(
                 )
             }
             composable("watchlist") {
-                PlaceholderScreen(
-                    Icons.Filled.Star,
-                    R.string.placeholder_watchlist_title,
-                    R.string.placeholder_watchlist_body,
+                WatchlistScreen(
+                    state = dashboardState,
+                    onToggleFavorite = { dashboardViewModel.toggleFavorite(it) },
                 )
             }
             composable("settings") { SettingsScreen(theme, onTheme) }
