@@ -1,8 +1,10 @@
 package app.aurex.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.aurex.data.MarketQuote
+import app.aurex.data.PreferencesRepository
 import app.aurex.data.QuoteRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -17,36 +19,72 @@ data class DashboardState(
     val loading: Boolean = true,
     val error: String? = null,
     val lastLoadedAtMillis: Long? = null,
+    val isFromCache: Boolean = false,
 )
 
-class DashboardViewModel : ViewModel() {
+class DashboardViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = QuoteRepository()
+    private val preferences = PreferencesRepository(application)
+
     private val _state = MutableStateFlow(DashboardState())
     val state: StateFlow<DashboardState> = _state.asStateFlow()
+
     private var job: Job? = null
 
     init {
-        refresh()
+        viewModelScope.launch {
+            try {
+                val cached = preferences.loadQuotesCache()
+                if (cached != null) {
+                    _state.update {
+                        it.copy(
+                            quotes = cached.quotes.associateBy { quote -> quote.assetId },
+                            lastLoadedAtMillis = cached.savedAtMillis,
+                            isFromCache = true,
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // A cache problem must not prevent a network refresh.
+            }
+
+            refresh()
+        }
     }
 
     fun refresh() {
         if (job?.isActive == true) return
+
         job = viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
+
             try {
                 val quotes = repository.fetchQuotes()
+
+                if (quotes.isNotEmpty()) {
+                    preferences.saveQuotesCache(quotes)
+                }
+
                 _state.update {
                     it.copy(
-                        quotes = quotes.associateBy { q -> q.assetId },
+                        quotes = quotes.associateBy { quote -> quote.assetId },
                         loading = false,
                         lastLoadedAtMillis = System.currentTimeMillis(),
+                        isFromCache = false,
+                        error = null,
                     )
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // Keep previously loaded quotes so the user still sees the last known data.
-                _state.update { it.copy(loading = false, error = e.message ?: "Connection failed") }
+                _state.update {
+                    it.copy(
+                        loading = false,
+                        error = e.message ?: "Connection failed",
+                    )
+                }
             }
         }
     }
