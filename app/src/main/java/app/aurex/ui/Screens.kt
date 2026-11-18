@@ -2,231 +2,196 @@ package app.aurex.ui
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.aurex.R
 import app.aurex.data.ThemeId
-import app.aurex.data.MarketQuote
-import app.aurex.data.QuoteRepository
-import kotlinx.coroutines.CancellationException
-import java.text.NumberFormat
 
-private data class Slot(val id: String, val titleRes: Int)
+private data class Destination(val route: String, val labelRes: Int, val icon: ImageVector)
 
-private val iranSlots = listOf(
-    Slot("usd_free_irt", R.string.asset_usd_free),
-    Slot("eur_free_irt", R.string.asset_eur_free),
-    Slot("gold18_irt", R.string.asset_gold18),
-    Slot("coin_irt", R.string.asset_coin),
-    Slot("tse_index", R.string.asset_tse_index),
+private val destinations = listOf(
+    Destination("home", R.string.nav_home, Icons.Filled.Home),
+    Destination("markets", R.string.nav_markets, Icons.Filled.List),
+    Destination("ai", R.string.nav_ai, Icons.Filled.Face),
+    Destination("watchlist", R.string.nav_watchlist, Icons.Filled.Star),
+    Destination("settings", R.string.nav_settings, Icons.Filled.Settings),
 )
 
-private val globalSlots = listOf(
-    Slot("gold_oz_usd", R.string.asset_global_gold),
-    Slot("silver_oz_usd", R.string.asset_global_silver),
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AurexApp(theme: ThemeId, onTheme: (ThemeId) -> Unit) {
+fun AurexApp(
+    theme: ThemeId,
+    onTheme: (ThemeId) -> Unit,
+    dashboardViewModel: DashboardViewModel,
+) {
     val nav = rememberNavController()
-    val route = nav.currentBackStackEntryAsState().value?.destination?.route ?: "dashboard"
+    val route = nav.currentBackStackEntryAsState().value?.destination?.route ?: "home"
+    val dashboardState by dashboardViewModel.state.collectAsStateWithLifecycle()
+
+    val navigateTo: (String) -> Unit = { target ->
+        nav.navigate(target) {
+            popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = {
-                Column {
-                    Text(stringResource(R.string.app_name))
-                    Text(stringResource(R.string.tagline), style = MaterialTheme.typography.labelSmall)
-                }
-            })
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = route == "dashboard",
-                    onClick = { nav.navigate("dashboard") { launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_dashboard)) }
-                )
-                NavigationBarItem(
-                    selected = route == "settings",
-                    onClick = { nav.navigate("settings") { launchSingleTop = true } },
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_settings)) }
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = { AurexBottomBar(currentRoute = route, onSelect = navigateTo) },
+    ) { padding ->
+        NavHost(nav, startDestination = "home", modifier = Modifier.padding(padding)) {
+            composable("home") {
+                HomeScreen(
+                    state = dashboardState,
+                    onRefresh = { dashboardViewModel.refresh() },
+                    onOpenSettings = { navigateTo("settings") },
                 )
             }
-        },
-    ) { padding ->
-        NavHost(nav, startDestination = "dashboard", modifier = Modifier.padding(padding)) {
-            composable("dashboard") { DashboardScreen() }
+            composable("markets") {
+                PlaceholderScreen(
+                    Icons.Filled.List,
+                    R.string.placeholder_markets_title,
+                    R.string.placeholder_markets_body,
+                )
+            }
+            composable("ai") {
+                PlaceholderScreen(
+                    Icons.Filled.Face,
+                    R.string.placeholder_ai_title,
+                    R.string.placeholder_ai_body,
+                )
+            }
+            composable("watchlist") {
+                PlaceholderScreen(
+                    Icons.Filled.Star,
+                    R.string.placeholder_watchlist_title,
+                    R.string.placeholder_watchlist_body,
+                )
+            }
             composable("settings") { SettingsScreen(theme, onTheme) }
         }
     }
 }
 
 @Composable
-private fun DashboardScreen() {
-    val repository = remember { QuoteRepository() }
-    var quotes by remember { mutableStateOf<List<MarketQuote>>(emptyList()) }
-    var loading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var refreshKey by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(refreshKey) {
-        loading = true
-        error = null
-        try {
-            quotes = repository.fetchQuotes()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            error = e.message ?: "Connection failed"
-        } finally {
-            loading = false
-        }
-    }
-
-    val quoteMap = quotes.associateBy { it.assetId }
-
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SectionTitle(R.string.section_iran)
-                TextButton(
-                    onClick = { refreshKey++ },
-                    enabled = !loading
-                ) {
-                    Text(if (loading) "در حال دریافت..." else "به‌روزرسانی")
-                }
-            }
-        }
-
-        if (error != null) {
-            item {
-                Text(
-                    text = "خطا در دریافت اطلاعات: $error",
-                    color = MaterialTheme.colorScheme.error
-                )
-                Button(onClick = { refreshKey++ }) {
-                    Text("تلاش مجدد")
-                }
-            }
-        }
-
-        items(iranSlots) { slot ->
-            AssetCard(slot, quoteMap[slot.id])
-        }
-
-        item { SectionTitle(R.string.section_global) }
-
-        items(globalSlots) { slot ->
-            AssetCard(slot, quoteMap[slot.id])
-        }
-    }
-}
-
-@Composable
-private fun SectionTitle(res: Int) {
-    Text(
-        stringResource(res),
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary
-    )
-}
-
-@Composable
-private fun AssetCard(slot: Slot, quote: MarketQuote?) {
-    val uriHandler = LocalUriHandler.current
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(
-                stringResource(slot.titleRes),
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            if (quote == null) {
-                Text(
-                    "داده موجود نیست",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            } else {
-                val formatter = NumberFormat.getNumberInstance().apply {
-                    maximumFractionDigits = 2
-                }
-
-                val unitLabel = when (quote.unit) {
-                    "IRT" -> "تومان"
-                    "USD" -> "دلار"
-                    else -> quote.unit
-                }
-
-                Text(
-                    "${formatter.format(quote.price)} $unitLabel",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-
-                quote.changePct?.let {
-                    Text(
-                        "تغییر: ${"%.2f".format(it)}%",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                val freshnessText = when (quote.freshness) {
-                    "fresh" -> "به‌روز"
-                    "delayed" -> "با تأخیر"
-                    "stale" -> "قدیمی"
-                    else -> "وضعیت نامشخص"
-                }
-
-                Text(
-                    "وضعیت داده: $freshnessText",
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    "قیمت‌ها از طلاسنج",
-                    modifier = Modifier.clickable {
-                        uriHandler.openUri("https://talasanj.info")
+private fun AurexBottomBar(currentRoute: String, onSelect: (String) -> Unit) {
+    val colors = LocalAurexColors.current
+    Column {
+        HorizontalDivider(color = colors.border)
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+        ) {
+            destinations.forEach { dest ->
+                NavigationBarItem(
+                    selected = currentRoute == dest.route,
+                    onClick = { onSelect(dest.route) },
+                    icon = { Icon(dest.icon, contentDescription = null) },
+                    label = {
+                        Text(
+                            stringResource(dest.labelRes),
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     },
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelSmall
+                    alwaysShowLabel = true,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = colors.gold,
+                        selectedTextColor = colors.gold,
+                        unselectedIconColor = colors.textSecondary,
+                        unselectedTextColor = colors.textSecondary,
+                        indicatorColor = colors.gold.copy(alpha = 0.14f),
+                    ),
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PlaceholderScreen(icon: ImageVector, titleRes: Int, bodyRes: Int) {
+    val colors = LocalAurexColors.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(colors.gold.copy(alpha = 0.12f))
+                .border(1.dp, colors.gold.copy(alpha = 0.4f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = colors.gold)
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            stringResource(titleRes),
+            style = MaterialTheme.typography.titleLarge,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            stringResource(bodyRes),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        ChipLabel(stringResource(R.string.coming_soon))
     }
 }
 
@@ -246,33 +211,55 @@ private val languageOptions = listOf(
 
 @Composable
 private fun SettingsScreen(theme: ThemeId, onTheme: (ThemeId) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(16.dp)) {
-        item { SectionTitle(R.string.settings_theme) }
-
-        items(themeOptions) { (id, label) ->
-            Row(
-                Modifier.fillMaxWidth().clickable { onTheme(id) }.padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RadioButton(selected = id == theme, onClick = { onTheme(id) })
-                Text(stringResource(label))
+    val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        item {
+            Text(
+                stringResource(R.string.nav_settings),
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+        item { SectionHeader(R.string.settings_theme) }
+        item {
+            AurexCard(modifier = Modifier.fillMaxWidth()) {
+                themeOptions.forEach { (id, label) ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onTheme(id) }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = id == theme, onClick = null)
+                        Spacer(Modifier.size(12.dp))
+                        Text(stringResource(label))
+                    }
+                }
             }
         }
-
+        item { SectionHeader(R.string.settings_language) }
         item {
-            Spacer(Modifier.height(16.dp))
-            SectionTitle(R.string.settings_language)
-        }
-
-        items(languageOptions) { (tag, label) ->
-            Row(
-                Modifier.fillMaxWidth().clickable {
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(tag)
-                    )
-                }.padding(vertical = 12.dp)
-            ) {
-                Text(stringResource(label))
+            AurexCard(modifier = Modifier.fillMaxWidth()) {
+                languageOptions.forEach { (tag, label) ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                AppCompatDelegate.setApplicationLocales(
+                                    LocaleListCompat.forLanguageTags(tag)
+                                )
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = currentTag.startsWith(tag), onClick = null)
+                        Spacer(Modifier.size(12.dp))
+                        Text(stringResource(label))
+                    }
+                }
             }
         }
     }

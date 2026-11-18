@@ -2,12 +2,19 @@
 <resources>
     <string name="app_name" translatable="false">AUREX</string>
     <string name="tagline">BEYOND THE MARKETS</string>
+
     <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_markets">Markets</string>
+    <string name="nav_ai">AI Assistant</string>
+    <string name="nav_watchlist">Watchlist</string>
     <string name="nav_settings">Settings</string>
+
     <string name="settings_theme">Theme</string>
     <string name="settings_language">Language</string>
     <string name="section_iran">Iranian market</string>
     <string name="section_global">Global markets</string>
+
     <string name="asset_usd_free">US dollar (free market)</string>
     <string name="asset_eur_free">Euro (free market)</string>
     <string name="asset_gold18">18-karat gold</string>
@@ -15,6 +22,65 @@
     <string name="asset_tse_index">Tehran Stock Exchange index</string>
     <string name="asset_global_gold">Gold (global ounce)</string>
     <string name="asset_global_silver">Silver (global ounce)</string>
+
     <string name="no_data_title">No data available</string>
     <string name="no_data_body">No verified data source is connected yet. Prices appear only when they come from a verified source.</string>
+
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_settings">Settings</string>
+    <string name="notif_dialog_title">Notifications</string>
+    <string name="notif_dialog_body">Alerts and notifications will be added in a later phase. Nothing is being sent yet.</string>
+    <string name="ok">OK</string>
+
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_offline">Offline</string>
+    <string name="status_live">Live data</string>
+    <string name="status_delayed">Delayed data</string>
+    <string name="status_stale">Stale data</string>
+    <string name="status_unknown">Status unknown</string>
+    <string name="status_no_data">No data</string>
+    <string name="refresh">Refresh</string>
+    <string name="refreshing">Loading…</string>
+    <string name="last_refreshed">Last refreshed %1$s</string>
+
+    <string name="error_title">Could not load market data</string>
+    <string name="error_showing_previous">Showing the last data that was loaded.</string>
+    <string name="error_body">The server could not be reached.</string>
+    <string name="error_retry">Try again</string>
+
+    <string name="overview_title">Market overview</string>
+    <string name="overview_currency">Currency market</string>
+    <string name="overview_gold">Gold market</string>
+    <string name="overview_global">Global market</string>
+    <string name="featured_label">Featured asset</string>
+    <string name="chart_unavailable">Price chart unavailable — the backend does not provide price history yet.</string>
+    <string name="watch_title">Market watch</string>
+
+    <string name="unavailable">Unavailable</string>
+    <string name="loading_short">Loading…</string>
+    <string name="change_unavailable">Change: n/a</string>
+    <string name="fresh_live">Live</string>
+    <string name="fresh_delayed">Delayed</string>
+    <string name="fresh_stale">Stale</string>
+    <string name="fresh_historical">Historical</string>
+    <string name="fresh_unknown">Unknown</string>
+    <string name="unit_irt">Toman</string>
+    <string name="unit_irr">Rial</string>
+    <string name="unit_usd">USD</string>
+    <string name="source_label">Source: %1$s</string>
+    <string name="updated_at">Updated %1$s</string>
+    <string name="fetched_at">Fetched %1$s</string>
+
+    <string name="ai_title">AI ANALYSIS — COMING SOON</string>
+    <string name="ai_body">AI analysis is not implemented yet. No analysis or forecast is shown.</string>
+    <string name="news_title">Market news</string>
+    <string name="news_body">News integration is planned for a later phase. No news is shown until a verified feed is connected.</string>
+    <string name="coming_soon">Coming soon</string>
+
+    <string name="placeholder_markets_title">Markets</string>
+    <string name="placeholder_markets_body">Full market lists, charts and asset detail pages will be added in a later phase.</string>
+    <string name="placeholder_ai_title">AI Assistant</string>
+    <string name="placeholder_ai_body">The AI assistant is not active yet. It will be built in a later phase.</string>
+    <string name="placeholder_watchlist_title">Watchlist</string>
+    <string name="placeholder_watchlist_body">Personal watchlists and asset tracking will be added in a later phase.</string>
 </resources>

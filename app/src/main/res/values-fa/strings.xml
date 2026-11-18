@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tagline">فراتر از بازارها</string>
+
     <string name="nav_dashboard">داشبورد</string>
+    <string name="nav_home">خانه</string>
+    <string name="nav_markets">بازارها</string>
+    <string name="nav_ai">دستیار هوشمند</string>
+    <string name="nav_watchlist">دیده‌بان</string>
     <string name="nav_settings">تنظیمات</string>
+
     <string name="settings_theme">پوسته</string>
     <string name="settings_language">زبان</string>
     <string name="section_iran">بازار ایران</string>
     <string name="section_global">بازارهای جهانی</string>
+
     <string name="asset_usd_free">دلار آمریکا (بازار آزاد)</string>
     <string name="asset_eur_free">یورو (بازار آزاد)</string>
     <string name="asset_gold18">طلای ۱۸ عیار</string>
@@ -14,6 +21,65 @@
     <string name="asset_tse_index">شاخص بورس تهران</string>
     <string name="asset_global_gold">طلا (اونس جهانی)</string>
     <string name="asset_global_silver">نقره (اونس جهانی)</string>
+
     <string name="no_data_title">داده‌ای در دسترس نیست</string>
     <string name="no_data_body">هنوز هیچ منبع داده تأییدشده‌ای متصل نشده است. قیمت‌ها فقط زمانی نمایش داده می‌شوند که از منبعی تأییدشده باشند.</string>
+
+    <string name="cd_notifications">اعلان‌ها</string>
+    <string name="cd_settings">تنظیمات</string>
+    <string name="notif_dialog_title">اعلان‌ها</string>
+    <string name="notif_dialog_body">سامانه هشدار و اعلان در مرحله‌ای بعدی اضافه می‌شود. فعلاً هیچ اعلانی ارسال نمی‌شود.</string>
+    <string name="ok">تأیید</string>
+
+    <string name="status_connecting">در حال اتصال…</string>
+    <string name="status_offline">عدم اتصال</string>
+    <string name="status_live">داده زنده</string>
+    <string name="status_delayed">داده با تأخیر</string>
+    <string name="status_stale">داده قدیمی</string>
+    <string name="status_unknown">وضعیت نامشخص</string>
+    <string name="status_no_data">داده‌ای نیست</string>
+    <string name="refresh">به‌روزرسانی</string>
+    <string name="refreshing">در حال دریافت…</string>
+    <string name="last_refreshed">آخرین دریافت: %1$s</string>
+
+    <string name="error_title">خطا در دریافت اطلاعات بازار</string>
+    <string name="error_showing_previous">آخرین داده‌های دریافت‌شده نمایش داده می‌شود.</string>
+    <string name="error_body">اتصال به سرور برقرار نشد.</string>
+    <string name="error_retry">تلاش مجدد</string>
+
+    <string name="overview_title">نمای کلی بازار</string>
+    <string name="overview_currency">بازار ارز</string>
+    <string name="overview_gold">بازار طلا</string>
+    <string name="overview_global">بازار جهانی</string>
+    <string name="featured_label">دارایی ویژه</string>
+    <string name="chart_unavailable">نمودار قیمت در دسترس نیست — سرور هنوز تاریخچه قیمت ارائه نمی‌دهد.</string>
+    <string name="watch_title">دیده‌بان بازار</string>
+
+    <string name="unavailable">در دسترس نیست</string>
+    <string name="loading_short">در حال دریافت…</string>
+    <string name="change_unavailable">تغییر: نامشخص</string>
+    <string name="fresh_live">زنده</string>
+    <string name="fresh_delayed">با تأخیر</string>
+    <string name="fresh_stale">قدیمی</string>
+    <string name="fresh_historical">تاریخی</string>
+    <string name="fresh_unknown">نامشخص</string>
+    <string name="unit_irt">تومان</string>
+    <string name="unit_irr">ریال</string>
+    <string name="unit_usd">دلار</string>
+    <string name="source_label">منبع: %1$s</string>
+    <string name="updated_at">به‌روزرسانی: %1$s</string>
+    <string name="fetched_at">دریافت: %1$s</string>
+
+    <string name="ai_title">تحلیل هوشمند — به‌زودی</string>
+    <string name="ai_body">تحلیل هوش مصنوعی هنوز پیاده‌سازی نشده است و هیچ تحلیل یا پیش‌بینی‌ای نمایش داده نمی‌شود.</string>
+    <string name="news_title">اخبار بازار</string>
+    <string name="news_body">اتصال به منابع خبری در مرحله‌ای بعدی انجام می‌شود. تا آن زمان هیچ خبری نمایش داده نمی‌شود.</string>
+    <string name="coming_soon">به‌زودی</string>
+
+    <string name="placeholder_markets_title">بازارها</string>
+    <string name="placeholder_markets_body">فهرست کامل بازارها، نمودارها و صفحه جزئیات هر دارایی در مرحله‌ای بعدی اضافه می‌شود.</string>
+    <string name="placeholder_ai_title">دستیار هوشمند</string>
+    <string name="placeholder_ai_body">دستیار هوش مصنوعی هنوز فعال نیست و در مرحله‌ای بعدی ساخته می‌شود.</string>
+    <string name="placeholder_watchlist_title">دیده‌بان</string>
+    <string name="placeholder_watchlist_body">فهرست‌های شخصی و پیگیری دارایی در مرحله‌ای بعدی اضافه می‌شود.</string>
 </resources>

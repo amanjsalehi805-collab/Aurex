@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tagline">لەودیوی بازاڕەکانەوە</string>
+
     <string name="nav_dashboard">داشبۆرد</string>
+    <string name="nav_home">سەرەکی</string>
+    <string name="nav_markets">بازاڕەکان</string>
+    <string name="nav_ai">یاریدەدەری زیرەک</string>
+    <string name="nav_watchlist">چاودێری</string>
     <string name="nav_settings">ڕێکخستنەکان</string>
+
     <string name="settings_theme">ڕووکار</string>
     <string name="settings_language">زمان</string>
     <string name="section_iran">بازاڕی ئێران</string>
     <string name="section_global">بازاڕە جیهانییەکان</string>
+
     <string name="asset_usd_free">دۆلاری ئەمریکی (بازاڕی ئازاد)</string>
     <string name="asset_eur_free">یۆرۆ (بازاڕی ئازاد)</string>
     <string name="asset_gold18">زێڕی ١٨ عەیار</string>
@@ -14,6 +21,65 @@
     <string name="asset_tse_index">پێوەری بۆرسی تاران</string>
     <string name="asset_global_gold">زێڕ (ئۆنسی جیهانی)</string>
     <string name="asset_global_silver">زیو (ئۆنسی جیهانی)</string>
+
     <string name="no_data_title">هیچ داتایەک بەردەست نییە</string>
     <string name="no_data_body">هێشتا هیچ سەرچاوەیەکی داتای پشتڕاستکراو نەبەستراوەتەوە. نرخەکان تەنها کاتێک پیشان دەدرێن کە لە سەرچاوەیەکی پشتڕاستکراو بن.</string>
+
+    <string name="cd_notifications">ئاگادارکردنەوەکان</string>
+    <string name="cd_settings">ڕێکخستنەکان</string>
+    <string name="notif_dialog_title">ئاگادارکردنەوەکان</string>
+    <string name="notif_dialog_body">سیستەمی ئاگادارکردنەوە لە قۆناغێکی داهاتوودا زیاد دەکرێت. ئێستا هیچ ئاگادارکردنەوەیەک نانێردرێت.</string>
+    <string name="ok">باشە</string>
+
+    <string name="status_connecting">پەیوەندی دەکرێت…</string>
+    <string name="status_offline">بێ پەیوەندی</string>
+    <string name="status_live">داتای زیندوو</string>
+    <string name="status_delayed">داتای دواکەوتوو</string>
+    <string name="status_stale">داتای کۆن</string>
+    <string name="status_unknown">دۆخی نادیار</string>
+    <string name="status_no_data">داتا نییە</string>
+    <string name="refresh">نوێکردنەوە</string>
+    <string name="refreshing">وەردەگیرێت…</string>
+    <string name="last_refreshed">دوایین وەرگرتن: %1$s</string>
+
+    <string name="error_title">هەڵە لە وەرگرتنی داتای بازاڕ</string>
+    <string name="error_showing_previous">دوایین داتای وەرگیراو پیشان دەدرێت.</string>
+    <string name="error_body">پەیوەندی بە سێرڤەرەوە نەکرا.</string>
+    <string name="error_retry">دووبارە هەوڵبدەرەوە</string>
+
+    <string name="overview_title">کورتەی بازاڕ</string>
+    <string name="overview_currency">بازاڕی دراو</string>
+    <string name="overview_gold">بازاڕی زێڕ</string>
+    <string name="overview_global">بازاڕی جیهانی</string>
+    <string name="featured_label">دارایی تایبەت</string>
+    <string name="chart_unavailable">هێڵکاری نرخ بەردەست نییە — سێرڤەر هێشتا مێژووی نرخ نادات.</string>
+    <string name="watch_title">چاودێری بازاڕ</string>
+
+    <string name="unavailable">بەردەست نییە</string>
+    <string name="loading_short">وەردەگیرێت…</string>
+    <string name="change_unavailable">گۆڕانکاری: نادیار</string>
+    <string name="fresh_live">زیندوو</string>
+    <string name="fresh_delayed">دواکەوتوو</string>
+    <string name="fresh_stale">کۆن</string>
+    <string name="fresh_historical">مێژوویی</string>
+    <string name="fresh_unknown">نادیار</string>
+    <string name="unit_irt">تمەن</string>
+    <string name="unit_irr">ڕیاڵ</string>
+    <string name="unit_usd">دۆلار</string>
+    <string name="source_label">سەرچاوە: %1$s</string>
+    <string name="updated_at">نوێکراوەتەوە: %1$s</string>
+    <string name="fetched_at">وەرگیراوە: %1$s</string>
+
+    <string name="ai_title">شیکاری زیرەک — بەم زووانە</string>
+    <string name="ai_body">شیکاری ژیریی دەستکرد هێشتا جێبەجێ نەکراوە و هیچ شیکاری یان پێشبینییەک پیشان نادرێت.</string>
+    <string name="news_title">هەواڵی بازاڕ</string>
+    <string name="news_body">بەستنەوەی سەرچاوەکانی هەواڵ لە قۆناغێکی داهاتوودا دەکرێت. تا ئەو کاتە هیچ هەواڵێک پیشان نادرێت.</string>
+    <string name="coming_soon">بەم زووانە</string>
+
+    <string name="placeholder_markets_title">بازاڕەکان</string>
+    <string name="placeholder_markets_body">لیستی تەواوی بازاڕەکان، هێڵکارییەکان و پەڕەی وردەکاری هەر دارایییەک لە قۆناغێکی داهاتوودا زیاد دەکرێن.</string>
+    <string name="placeholder_ai_title">یاریدەدەری زیرەک</string>
+    <string name="placeholder_ai_body">یاریدەدەری ژیریی دەستکرد هێشتا چالاک نییە و لە قۆناغێکی داهاتوودا دروست دەکرێت.</string>
+    <string name="placeholder_watchlist_title">چاودێری</string>
+    <string name="placeholder_watchlist_body">لیستی کەسی و شوێنکەوتنی دارایی لە قۆناغێکی داهاتوودا زیاد دەکرێن.</string>
 </resources>

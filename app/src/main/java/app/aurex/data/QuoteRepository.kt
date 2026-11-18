@@ -12,8 +12,14 @@ data class MarketQuote(
     val unit: String,
     val changePct: Double?,
     val freshness: String,
-    val source: String
+    val source: String,
+    val sourceTimestamp: String? = null,
+    val fetchedAt: String? = null,
+    val flags: List<String> = emptyList()
 )
+
+private fun JSONObject.optStringOrNull(key: String): String? =
+    if (!has(key) || isNull(key)) null else getString(key)
 
 class QuoteRepository {
 
@@ -51,6 +57,15 @@ class QuoteRepository {
                     for (i in 0 until quotes.length()) {
                         val item = quotes.getJSONObject(i)
 
+                        val flagsArray = item.optJSONArray("flags")
+                        val flags = buildList {
+                            if (flagsArray != null) {
+                                for (f in 0 until flagsArray.length()) {
+                                    add(flagsArray.getString(f))
+                                }
+                            }
+                        }
+
                         add(
                             MarketQuote(
                                 assetId = item.getString("asset_id"),
@@ -64,7 +79,10 @@ class QuoteRepository {
                                 ),
                                 source = item.optString(
                                     "source", "Unknown"
-                                )
+                                ),
+                                sourceTimestamp = item.optStringOrNull("source_timestamp"),
+                                fetchedAt = item.optStringOrNull("fetched_at"),
+                                flags = flags
                             )
                         )
                     }
