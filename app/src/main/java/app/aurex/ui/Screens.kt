@@ -1,24 +1,8 @@
 package app.aurex.ui
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
@@ -31,28 +15,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.aurex.R
-import app.aurex.data.ThemeId
+import app.aurex.data.AppSettings
+import kotlinx.coroutines.delay
 
 private data class Destination(val route: String, val labelRes: Int, val icon: ImageVector)
 
@@ -66,55 +50,115 @@ private val destinations = listOf(
 
 @Composable
 fun AurexApp(
-    theme: ThemeId,
-    onTheme: (ThemeId) -> Unit,
+    settings: AppSettings,
+    actions: SettingsActions,
     dashboardViewModel: DashboardViewModel,
+    aiViewModel: AiViewModel,
 ) {
     val nav = rememberNavController()
     val route = nav.currentBackStackEntryAsState().value?.destination?.route ?: "home"
     val dashboardState by dashboardViewModel.state.collectAsStateWithLifecycle()
+    val aiState by aiViewModel.state.collectAsStateWithLifecycle()
 
-    val navigateTo: (String) -> Unit = { target ->
+    // Automatic refresh runs only while the app is on screen, so it does not drain battery or data.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(settings.refreshMinutes, lifecycleOwner) {
+        if (settings.refreshMinutes > 0) {
+            lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(settings.refreshMinutes * 60_000L)
+                    dashboardViewModel.refresh()
+                }
+            }
+        }
+    }
+
+    val navigateTab: (String) -> Unit = { target ->
         nav.navigate(target) {
             popUpTo(nav.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
             restoreState = true
         }
     }
+    val openAsset: (String) -> Unit = { id -> nav.navigate("asset/$id") { launchSingleTop = true } }
+    val openConverter: () -> Unit = { nav.navigate("converter") { launchSingleTop = true } }
+    val back: () -> Unit = { nav.popBackStack() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { AurexBottomBar(currentRoute = route, onSelect = navigateTo) },
+        bottomBar = {
+            AurexBottomBar(
+                // Detail screens belong to the tab they were opened from (Markets).
+                currentRoute = if (route.startsWith("asset") || route == "converter") "markets" else route,
+                onSelect = navigateTab,
+            )
+        },
     ) { padding ->
-        NavHost(nav, startDestination = "home", modifier = Modifier.padding(padding)) {
+        NavHost(
+            nav,
+            startDestination = "home",
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+        ) {
             composable("home") {
                 HomeScreen(
                     state = dashboardState,
                     onRefresh = { dashboardViewModel.refresh() },
-                    onOpenSettings = { navigateTo("settings") },
+                    onOpenSettings = { navigateTab("settings") },
+                    onOpenConverter = openConverter,
+                    onOpenAsset = openAsset,
+                    onOpenAnalysis = {
+                        aiViewModel.setTab(1)
+                        navigateTab("ai")
+                    },
+                    onLoadHistory = { id, hours -> dashboardViewModel.loadHistory(id, hours) },
                 )
             }
             composable("markets") {
-                PlaceholderScreen(
-                    Icons.Filled.List,
-                    R.string.placeholder_markets_title,
-                    R.string.placeholder_markets_body,
+                MarketsScreen(
+                    state = dashboardState,
+                    onRefresh = { dashboardViewModel.refresh() },
+                    onOpenConverter = openConverter,
+                    onOpenAsset = openAsset,
+                    onToggleFavorite = { dashboardViewModel.toggleFavorite(it) },
+                    onReloadStocks = { dashboardViewModel.loadStocks() },
+                )
+            }
+            composable("asset/{id}") { entry ->
+                AssetDetailScreen(
+                    assetId = entry.arguments?.getString("id").orEmpty(),
+                    state = dashboardState,
+                    onBack = back,
+                    onRefresh = { dashboardViewModel.refresh() },
+                    onToggleFavorite = { dashboardViewModel.toggleFavorite(it) },
+                    onLoadHistory = { id, hours -> dashboardViewModel.loadHistory(id, hours) },
+                )
+            }
+            composable("converter") {
+                ConverterScreen(
+                    state = dashboardState,
+                    onBack = back,
+                    onRefresh = { dashboardViewModel.refresh() },
                 )
             }
             composable("ai") {
-                PlaceholderScreen(
-                    Icons.Filled.Face,
-                    R.string.placeholder_ai_title,
-                    R.string.placeholder_ai_body,
+                AiScreen(
+                    state = aiState,
+                    onTab = { aiViewModel.setTab(it) },
+                    onSend = { text, language -> aiViewModel.send(text, language) },
+                    onRetryChat = { aiViewModel.retry(it) },
+                    onNewChat = { aiViewModel.newChat() },
+                    onLoadAnalysis = { language, force -> aiViewModel.loadAnalysis(language, force) },
                 )
             }
             composable("watchlist") {
                 WatchlistScreen(
                     state = dashboardState,
+                    onRefresh = { dashboardViewModel.refresh() },
                     onToggleFavorite = { dashboardViewModel.toggleFavorite(it) },
+                    onOpenAsset = openAsset,
                 )
             }
-            composable("settings") { SettingsScreen(theme, onTheme) }
+            composable("settings") { SettingsScreen(settings, actions) }
         }
     }
 }
@@ -150,115 +194,6 @@ private fun AurexBottomBar(currentRoute: String, onSelect: (String) -> Unit) {
                         indicatorColor = colors.gold.copy(alpha = 0.14f),
                     ),
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(icon: ImageVector, titleRes: Int, bodyRes: Int) {
-    val colors = LocalAurexColors.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(colors.gold.copy(alpha = 0.12f))
-                .border(1.dp, colors.gold.copy(alpha = 0.4f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = colors.gold)
-        }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            stringResource(titleRes),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            stringResource(bodyRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(16.dp))
-        ChipLabel(stringResource(R.string.coming_soon))
-    }
-}
-
-private val themeOptions = listOf(
-    ThemeId.MIDNIGHT to R.string.theme_midnight,
-    ThemeId.OBSIDIAN to R.string.theme_obsidian,
-    ThemeId.ARCTIC to R.string.theme_arctic,
-    ThemeId.CYBER to R.string.theme_cyber,
-    ThemeId.FOREST to R.string.theme_forest,
-)
-
-private val languageOptions = listOf(
-    "en" to R.string.lang_en,
-    "fa" to R.string.lang_fa,
-    "ckb" to R.string.lang_ckb
-)
-
-@Composable
-private fun SettingsScreen(theme: ThemeId, onTheme: (ThemeId) -> Unit) {
-    val currentTag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        item {
-            Text(
-                stringResource(R.string.nav_settings),
-                style = MaterialTheme.typography.titleLarge,
-            )
-        }
-        item { SectionHeader(R.string.settings_theme) }
-        item {
-            AurexCard(modifier = Modifier.fillMaxWidth()) {
-                themeOptions.forEach { (id, label) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { onTheme(id) }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = id == theme, onClick = null)
-                        Spacer(Modifier.size(12.dp))
-                        Text(stringResource(label))
-                    }
-                }
-            }
-        }
-        item { SectionHeader(R.string.settings_language) }
-        item {
-            AurexCard(modifier = Modifier.fillMaxWidth()) {
-                languageOptions.forEach { (tag, label) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                AppCompatDelegate.setApplicationLocales(
-                                    LocaleListCompat.forLanguageTags(tag)
-                                )
-                            }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = currentTag.startsWith(tag), onClick = null)
-                        Spacer(Modifier.size(12.dp))
-                        Text(stringResource(label))
-                    }
-                }
             }
         }
     }

@@ -8,4 +8,11 @@
     <string name="theme_arctic" translatable="false">Arctic Light</string>
     <string name="theme_cyber" translatable="false">Cyber Neon</string>
     <string name="theme_forest" translatable="false">Forest Emerald</string>
+    <string name="font_dejavu" translatable="false">DejaVu Sans</string>
+    <string name="font_vazirmatn" translatable="false">Vazirmatn</string>
+    <string name="font_noto_naskh" translatable="false">Noto Naskh Arabic</string>
+    <string name="font_noto_sans_arabic" translatable="false">Noto Sans Arabic</string>
+    <string name="font_sample_fa" translatable="false">پ چ ژ گ — نمونه متن فارسی ۰۱۲۳۴۵۶۷۸۹</string>
+    <string name="font_sample_ckb" translatable="false">ڕ ڵ ێ ۆ ڤ — نموونەی دەقی کوردی ٠١٢٣٤٥٦٧٨٩</string>
+    <string name="font_sample_en" translatable="false">Beyond the markets 0123456789</string>
 </resources>

@@ -1,10 +1,6 @@
 package app.aurex.data
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 data class MarketQuote(
     val assetId: String,
@@ -18,77 +14,47 @@ data class MarketQuote(
     val flags: List<String> = emptyList()
 )
 
-private fun JSONObject.optStringOrNull(key: String): String? =
-    if (!has(key) || isNull(key)) null else getString(key)
+data class QuotesResult(
+    val quotes: List<MarketQuote>,
+    val unavailable: Set<String>,
+    val staleAfterSeconds: Long,
+)
 
 class QuoteRepository {
 
-    private val baseUrl =
-        "https://aurex-backend-hu1t.onrender.com"
-
-    suspend fun fetchQuotes(): List<MarketQuote> =
-        withContext(Dispatchers.IO) {
-
-            val connection = URL("$baseUrl/v1/quotes")
-                .openConnection() as HttpURLConnection
-
-            try {
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 20000
-                connection.readTimeout = 30000
-                connection.setRequestProperty(
-                    "Accept", "application/json"
-                )
-
-                if (connection.responseCode != 200) {
-                    throw Exception(
-                        "Server error: ${connection.responseCode}"
+    suspend fun fetchQuotes(readTimeoutMs: Int = 30_000, connectTimeoutMs: Int = 20_000): QuotesResult {
+        val root = Api.get("/v1/quotes", readTimeoutMs, connectTimeoutMs)
+        val array = root.getJSONArray("quotes")
+        val quotes = buildList {
+            for (i in 0 until array.length()) {
+                val item = array.getJSONObject(i)
+                val price = item.getDouble("price")
+                if (!price.isFinite() || price <= 0) continue
+                add(
+                    MarketQuote(
+                        assetId = item.getString("asset_id"),
+                        price = price,
+                        unit = item.optString("unit", ""),
+                        changePct = item.optDoubleOrNull("change_pct"),
+                        freshness = item.optString("freshness", "unknown"),
+                        source = item.optString("source", "Unknown"),
+                        sourceTimestamp = item.optStringOrNull("source_timestamp"),
+                        fetchedAt = item.optStringOrNull("fetched_at"),
+                        flags = item.flagList(),
                     )
-                }
-
-                val response = connection.inputStream
-                    .bufferedReader()
-                    .use { it.readText() }
-
-                val root = JSONObject(response)
-                val quotes = root.getJSONArray("quotes")
-
-                buildList {
-                    for (i in 0 until quotes.length()) {
-                        val item = quotes.getJSONObject(i)
-
-                        val flagsArray = item.optJSONArray("flags")
-                        val flags = buildList {
-                            if (flagsArray != null) {
-                                for (f in 0 until flagsArray.length()) {
-                                    add(flagsArray.getString(f))
-                                }
-                            }
-                        }
-
-                        add(
-                            MarketQuote(
-                                assetId = item.getString("asset_id"),
-                                price = item.getDouble("price"),
-                                unit = item.optString("unit", ""),
-                                changePct = if (
-                                    item.isNull("change_pct")
-                                ) null else item.getDouble("change_pct"),
-                                freshness = item.optString(
-                                    "freshness", "unknown"
-                                ),
-                                source = item.optString(
-                                    "source", "Unknown"
-                                ),
-                                sourceTimestamp = item.optStringOrNull("source_timestamp"),
-                                fetchedAt = item.optStringOrNull("fetched_at"),
-                                flags = flags
-                            )
-                        )
-                    }
-                }
-            } finally {
-                connection.disconnect()
+                )
             }
         }
+        val unavailable = buildSet {
+            val arr = root.optJSONArray("unavailable")
+            if (arr != null) for (i in 0 until arr.length()) add(arr.getString(i))
+        }
+        val staleAfter = root.optLong("stale_after_s", 900L).takeIf { it > 0 } ?: 900L
+        return QuotesResult(quotes, unavailable, staleAfter)
+    }
+}
+
+private fun JSONObject.flagList(): List<String> {
+    val arr = optJSONArray("flags") ?: return emptyList()
+    return buildList { for (i in 0 until arr.length()) add(arr.getString(i)) }
 }

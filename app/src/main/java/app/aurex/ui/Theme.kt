@@ -10,11 +10,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.view.WindowCompat
+import app.aurex.data.AppSettings
+import app.aurex.data.FontScript
 import app.aurex.data.ThemeId
 
 /** Semantic colors that Material's ColorScheme has no slot for. */
@@ -73,16 +79,41 @@ private fun extrasFor(scheme: ColorScheme) = AurexColors(
 val LocalAurexColors = staticCompositionLocalOf { MidnightExtras }
 
 // No letter-spacing overrides: they break letter joining in Persian/Kurdish script.
-private val AurexTypography = Typography().run {
+private fun aurexTypography(family: FontFamily): Typography = Typography().run {
     copy(
-        titleLarge = titleLarge.copy(fontWeight = FontWeight.SemiBold),
-        titleMedium = titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        titleSmall = titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        displayLarge = displayLarge.copy(fontFamily = family),
+        displayMedium = displayMedium.copy(fontFamily = family),
+        displaySmall = displaySmall.copy(fontFamily = family),
+        headlineLarge = headlineLarge.copy(fontFamily = family),
+        headlineMedium = headlineMedium.copy(fontFamily = family),
+        headlineSmall = headlineSmall.copy(fontFamily = family),
+        titleLarge = titleLarge.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        titleMedium = titleMedium.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        titleSmall = titleSmall.copy(fontFamily = family, fontWeight = FontWeight.SemiBold),
+        bodyLarge = bodyLarge.copy(fontFamily = family),
+        bodyMedium = bodyMedium.copy(fontFamily = family),
+        bodySmall = bodySmall.copy(fontFamily = family),
+        labelLarge = labelLarge.copy(fontFamily = family),
+        labelMedium = labelMedium.copy(fontFamily = family),
+        labelSmall = labelSmall.copy(fontFamily = family),
     )
 }
 
 @Composable
-fun AurexTheme(theme: ThemeId, content: @Composable () -> Unit) {
+fun AurexTheme(settings: AppSettings, content: @Composable () -> Unit) {
+    val theme = settings.theme
+    val locale = LocalConfiguration.current.locales[0]
+    val context = LocalContext.current
+    val script = scriptOf(locale.language)
+    val fontId = when (script) {
+        FontScript.FA -> settings.fontFa
+        FontScript.CKB -> settings.fontCkb
+        FontScript.EN -> settings.fontEn
+    }
+    // The font of the CURRENT language is applied everywhere; changing it needs no restart.
+    val typography = remember(context, script, fontId) {
+        aurexTypography(FontCatalog.family(context, script, fontId))
+    }
     val scheme = when (theme) {
         ThemeId.MIDNIGHT -> Midnight
         ThemeId.OBSIDIAN -> Obsidian
@@ -104,7 +135,7 @@ fun AurexTheme(theme: ThemeId, content: @Composable () -> Unit) {
         }
     }
 
-    CompositionLocalProvider(LocalAurexColors provides extras) {
-        MaterialTheme(colorScheme = scheme, typography = AurexTypography, content = content)
+    CompositionLocalProvider(LocalAurexColors provides extras, LocalAppLocale provides locale) {
+        MaterialTheme(colorScheme = scheme, typography = typography, content = content)
     }
 }

@@ -1,7 +1,9 @@
 package app.aurex.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,25 +22,25 @@ import androidx.compose.ui.unit.dp
 import app.aurex.R
 import app.aurex.data.MarketQuote
 
+/** Uses exactly the same quotes (and freshness logic) as Markets; it never produces separate data. */
 @Composable
 fun WatchlistScreen(
     state: DashboardState,
+    onRefresh: () -> Unit,
     onToggleFavorite: (String) -> Unit,
+    onOpenAsset: (String) -> Unit,
 ) {
     val favorites = MarketWatchAssets.filter { it.id in state.favorites }
     val available = MarketWatchAssets.filter { it.id !in state.favorites }
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            horizontal = 16.dp,
-            vertical = 16.dp,
-        ),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            SectionHeader(R.string.watchlist_title)
+            Text(stringResource(R.string.watchlist_title), style = MaterialTheme.typography.titleLarge)
         }
+        item { StatusRow(state, onRefresh) }
 
         if (favorites.isEmpty()) {
             item {
@@ -58,80 +60,75 @@ fun WatchlistScreen(
                 }
             }
         } else {
-            items(favorites, key = { it.id }) { asset ->
+            items(favorites, key = { "fav_" + it.id }) { asset ->
                 WatchlistAssetRow(
-                    asset = asset,
+                    nameRes = asset.nameRes,
                     quote = state.quotes[asset.id],
-                    loading = state.loading,
+                    freshness = state.quotes[asset.id]?.let { state.freshnessOf(it) },
+                    loading = state.loading && state.quotes.isEmpty(),
                     isFavorite = true,
                     onToggle = { onToggleFavorite(asset.id) },
+                    onOpen = { onOpenAsset(asset.id) },
                 )
             }
         }
 
-        item {
-            SectionHeader(R.string.watchlist_available)
-        }
-
-        items(available, key = { it.id }) { asset ->
-            WatchlistAssetRow(
-                asset = asset,
-                quote = state.quotes[asset.id],
-                loading = state.loading,
-                isFavorite = false,
-                onToggle = { onToggleFavorite(asset.id) },
-            )
+        if (available.isNotEmpty()) {
+            item { SectionHeader(R.string.watchlist_available) }
+            items(available, key = { "add_" + it.id }) { asset ->
+                WatchlistAssetRow(
+                    nameRes = asset.nameRes,
+                    quote = state.quotes[asset.id],
+                    freshness = state.quotes[asset.id]?.let { state.freshnessOf(it) },
+                    loading = state.loading && state.quotes.isEmpty(),
+                    isFavorite = false,
+                    onToggle = { onToggleFavorite(asset.id) },
+                    onOpen = { onOpenAsset(asset.id) },
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun WatchlistAssetRow(
-    asset: AssetSpec,
+    nameRes: Int,
     quote: MarketQuote?,
+    freshness: String?,
     loading: Boolean,
     isFavorite: Boolean,
     onToggle: () -> Unit,
+    onOpen: () -> Unit,
 ) {
-    AurexCard(modifier = Modifier.fillMaxWidth()) {
+    AurexCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen)) {
         Column(Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(asset.nameRes),
-                        style = MaterialTheme.typography.titleSmall,
-                    )
+                    Text(stringResource(nameRes), style = MaterialTheme.typography.titleSmall)
                     if (quote != null) {
-                        Text(
-                            priceWithUnit(quote, 20),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
+                        Text(priceWithUnit(quote, 20), style = MaterialTheme.typography.bodyMedium)
                     } else {
                         UnavailableText(loading)
                     }
                 }
-
                 TextButton(onClick = onToggle) {
                     Text(
                         stringResource(
-                            if (isFavorite) R.string.watchlist_remove
-                            else R.string.watchlist_add
+                            if (isFavorite) R.string.watchlist_remove else R.string.watchlist_add
                         )
                     )
                 }
             }
 
-            if (quote != null) {
+            if (quote != null && freshness != null) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    FreshnessChip(quote.freshness)
+                    FreshnessChip(freshness)
                     Spacer(Modifier.width(10.dp))
                     ChangeText(quote.changePct)
                 }

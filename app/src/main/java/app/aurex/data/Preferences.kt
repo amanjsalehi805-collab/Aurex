@@ -2,6 +2,7 @@ package app.aurex.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -15,6 +16,19 @@ private val Context.dataStore by preferencesDataStore(name = "aurex_prefs")
 
 enum class ThemeId { MIDNIGHT, OBSIDIAN, ARCTIC, CYBER, FOREST }
 
+enum class FontScript { FA, CKB, EN }
+
+const val FONT_SYSTEM = "system"
+
+data class AppSettings(
+    val theme: ThemeId = ThemeId.MIDNIGHT,
+    val fontFa: String = FONT_SYSTEM,
+    val fontCkb: String = FONT_SYSTEM,
+    val fontEn: String = FONT_SYSTEM,
+    /** 0 = off. Automatic refresh only runs while the app is on screen. */
+    val refreshMinutes: Int = 5,
+)
+
 data class CachedQuotes(
     val quotes: List<MarketQuote>,
     val savedAtMillis: Long
@@ -25,11 +39,26 @@ class PreferencesRepository(private val context: Context) {
     private val quotesCacheKey = stringPreferencesKey("quotes_cache")
     private val quotesCacheTimeKey = longPreferencesKey("quotes_cache_time")
     private val favoritesKey = stringPreferencesKey("favorites")
+    private val fontFaKey = stringPreferencesKey("font_fa")
+    private val fontCkbKey = stringPreferencesKey("font_ckb")
+    private val fontEnKey = stringPreferencesKey("font_en")
+    private val refreshKey = intPreferencesKey("refresh_minutes")
 
     val theme: Flow<ThemeId> = context.dataStore.data.map { prefs ->
         prefs[themeKey]?.let {
             runCatching { ThemeId.valueOf(it) }.getOrNull()
         } ?: ThemeId.MIDNIGHT
+    }
+
+    val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
+        AppSettings(
+            theme = prefs[themeKey]?.let { runCatching { ThemeId.valueOf(it) }.getOrNull() }
+                ?: ThemeId.MIDNIGHT,
+            fontFa = prefs[fontFaKey] ?: FONT_SYSTEM,
+            fontCkb = prefs[fontCkbKey] ?: FONT_SYSTEM,
+            fontEn = prefs[fontEnKey] ?: FONT_SYSTEM,
+            refreshMinutes = (prefs[refreshKey] ?: 5).takeIf { it in listOf(0, 1, 5, 15) } ?: 5,
+        )
     }
 
     val favorites: Flow<Set<String>> = context.dataStore.data.map { prefs ->
@@ -46,6 +75,20 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun setTheme(theme: ThemeId) {
         context.dataStore.edit { it[themeKey] = theme.name }
+    }
+
+    suspend fun setFont(script: FontScript, fontId: String) {
+        context.dataStore.edit {
+            when (script) {
+                FontScript.FA -> it[fontFaKey] = fontId
+                FontScript.CKB -> it[fontCkbKey] = fontId
+                FontScript.EN -> it[fontEnKey] = fontId
+            }
+        }
+    }
+
+    suspend fun setRefreshMinutes(minutes: Int) {
+        context.dataStore.edit { it[refreshKey] = minutes }
     }
 
     suspend fun setFavorite(assetId: String, favorite: Boolean) {
