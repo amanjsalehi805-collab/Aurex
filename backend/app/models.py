@@ -47,3 +47,4 @@ class QuotesResponse(BaseModel):
     quotes: list[Quote]
     unavailable: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    stale_after_s: int | None = None

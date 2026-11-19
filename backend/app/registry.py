@@ -6,6 +6,17 @@ from .providers.base import Provider, ProviderError, ProviderHealth
 from .validation import finalize_quote
 
 
+EXPECTED_ASSETS = [
+    "usd_free_irt",
+    "eur_free_irt",
+    "gold18_irt",
+    "coin_irt",
+    "gold_oz_usd",
+    "silver_oz_usd",
+    "tse_index",
+]
+
+
 class Registry:
     """Providers in priority order. A lower-priority provider only fills an asset_id
     the higher ones could not supply; asset_id equality means identical market+unit."""
@@ -46,6 +57,12 @@ class Registry:
             self._last_known[q.asset_id] = q
 
         # Assets we previously had but cannot supply right now.
-        unavailable = sorted(set(self._last_known) - {q.asset_id for q in final})
-        return QuotesResponse(generated_at=now, quotes=final,
-                              unavailable=unavailable, warnings=warnings)
+        supplied = {q.asset_id for q in final}
+        unavailable = sorted((set(self._last_known) | set(EXPECTED_ASSETS)) - supplied)
+        return QuotesResponse(
+            generated_at=now,
+            quotes=final,
+            unavailable=unavailable,
+            warnings=warnings,
+            stale_after_s=self.settings.stale_after_s,
+        )

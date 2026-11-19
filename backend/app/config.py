@@ -23,6 +23,24 @@ class Settings(BaseSettings):
     client_rate_limit_per_min: int = 60
 
 
+    # --- AI ---
+    ai_provider: str = "openai"
+    ai_api_key: str = ""
+    ai_base_url: str = ""
+    ai_model: str = ""
+    ai_timeout_s: float = 45.0
+    ai_max_output_tokens: int = 700
+    ai_rate_limit_per_min: int = 10
+    analysis_cache_ttl_s: int = 600
+
+    # --- History and stocks ---
+    history_db_path: str = "data/aurex.db"
+    history_min_interval_s: int = 300
+    history_retention_days: int = 90
+    collect_interval_s: int = 300
+    admin_token: str = ""
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
