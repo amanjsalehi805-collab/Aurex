@@ -334,6 +334,10 @@ private fun AnalysisTab(ui: AnalysisUi, lang: String, onLoad: (String, Boolean) 
 private fun AnalysisBody(result: AnalysisResult) {
     val colors = LocalAurexColors.current
     val locale = LocalAppLocale.current
+    val unavailableNames = mutableListOf<String>()
+    for (item in result.unavailable) {
+        unavailableNames.add(stringResource(assetNameRes(item)))
+    }
 
     if (result.generatedAtSeconds > 0) {
         Text(
@@ -367,7 +371,7 @@ private fun AnalysisBody(result: AnalysisResult) {
                 Text(
                     stringResource(
                         R.string.analysis_unavailable_assets,
-                        result.unavailable.joinToString("، ") { stringResource(assetNameRes(it)) },
+                        unavailableNames.joinToString("، "),
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.textSecondary,
