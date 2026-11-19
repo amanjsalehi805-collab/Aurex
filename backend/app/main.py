@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .providers.base import ProviderError
 from .providers.talasanj import TalasanjProvider
+from .providers.twelvedata import TwelveDataProvider
+from .providers.alphavantage import AlphaVantageProvider
 from .registry import Registry
 
 
@@ -17,8 +19,30 @@ async def lifespan(app: FastAPI):
     talasanj = TalasanjProvider(
         s.talasanj_api_key, s.talasanj_base_url, s.talasanj_min_interval_s,
         s.http_timeout_s, s.http_retries, s.talasanj_api_key_backup)
+    providers = [talasanj]
+
+    if s.twelvedata_api_key:
+        twelvedata = TwelveDataProvider(
+            api_key=s.twelvedata_api_key,
+            symbols=s.twelvedata_symbols,
+            min_interval_s=s.twelvedata_min_interval_s,
+            timeout_s=s.http_timeout_s,
+            retries=s.http_retries,
+        )
+        providers.append(twelvedata)
+        app.state.twelvedata = twelvedata
+
+    if s.alpha_vantage_api_key:
+        alpha_vantage = AlphaVantageProvider(
+            api_key=s.alpha_vantage_api_key,
+            min_interval_s=s.alpha_vantage_min_interval_s,
+            timeout_s=s.http_timeout_s,
+        )
+        providers.append(alpha_vantage)
+        app.state.alpha_vantage = alpha_vantage
+
     app.state.talasanj = talasanj
-    app.state.registry = Registry([talasanj], s)  # add providers here, in priority order
+    app.state.registry = Registry(providers, s)
     yield
 
 
