@@ -92,6 +92,95 @@ def test_ai_configuration_requires_all_three():
     assert "SECRET" not in str(svc.info()) and "https://x" not in str(svc.info())
 
 
+
+def test_ai_fallback_configuration_is_safe():
+    for provider in ("openai", "anthropic", "gemini", "groq", "openrouter"):
+        assert ai.is_configured(provider, "secret", "https://api.example.com", "model")
+
+    svc = ai.AiService(
+        "gemini", "PRIMARY_SECRET", "https://primary.example.com", "primary-model",
+        5, 100,
+        fallbacks=[
+            {
+                "provider": "groq",
+                "api_key": "FALLBACK_SECRET",
+                "base_url": "https://fallback.example.com",
+                "model": "fallback-model",
+            },
+        ],
+    )
+    info = str(svc.info())
+    assert svc.configured
+    assert svc.info()["providers"] == ["gemini", "groq"]
+    assert "SECRET" not in info
+    assert "example.com" not in info
+
+
+def test_ai_fallback_uses_next_provider():
+    import asyncio
+
+    svc = ai.AiService(
+        "gemini", "key1", "https://one.example.com", "model-one",
+        5, 100,
+        fallbacks=[
+            {
+                "provider": "groq",
+                "api_key": "key2",
+                "base_url": "https://two.example.com",
+                "model": "model-two",
+            },
+        ],
+    )
+    calls = []
+
+    async def fake_complete(config, system, messages):
+        calls.append(config["provider"])
+        if config["provider"] == "gemini":
+            raise ai.AiError("ai_upstream_error")
+        return "Fallback answer"
+
+    svc._complete_with_provider = fake_complete
+    result = asyncio.run(
+        svc.complete_result("system", [{"role": "user", "content": "hello"}])
+    )
+
+    assert calls == ["gemini", "groq"]
+    assert result.text == "Fallback answer"
+    assert result.provider == "groq"
+    assert result.model == "model-two"
+
+
+def test_ai_invalid_input_does_not_trigger_fallback():
+    import asyncio
+
+    svc = ai.AiService(
+        "gemini", "key1", "https://one.example.com", "model-one",
+        5, 100,
+        fallbacks=[
+            {
+                "provider": "groq",
+                "api_key": "key2",
+                "base_url": "https://two.example.com",
+                "model": "model-two",
+            },
+        ],
+    )
+    calls = []
+
+    async def fake_complete(config, system, messages):
+        calls.append(config["provider"])
+        return "unexpected"
+
+    svc._complete_with_provider = fake_complete
+
+    try:
+        asyncio.run(svc.complete_result("system", []))
+        assert False, "Invalid input should raise AiError"
+    except ai.AiError as error:
+        assert error.code == "invalid_input"
+
+    assert calls == []
+
 def test_validate_messages_rules():
     ok = ai.validate_messages([{"role": "user", "content": " hi "}])
     assert ok == [{"role": "user", "content": "hi"}]

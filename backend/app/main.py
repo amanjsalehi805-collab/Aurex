@@ -113,6 +113,21 @@ async def lifespan(app: FastAPI):
         retention_days=settings.history_retention_days,
     )
 
+    fallbacks = [
+        {
+            "provider": settings.ai_fallback_1_provider,
+            "api_key": settings.ai_fallback_1_api_key,
+            "base_url": settings.ai_fallback_1_base_url,
+            "model": settings.ai_fallback_1_model,
+        },
+        {
+            "provider": settings.ai_fallback_2_provider,
+            "api_key": settings.ai_fallback_2_api_key,
+            "base_url": settings.ai_fallback_2_base_url,
+            "model": settings.ai_fallback_2_model,
+        },
+    ]
+
     app.state.ai = ai_mod.AiService(
         settings.ai_provider,
         settings.ai_api_key,
@@ -120,8 +135,8 @@ async def lifespan(app: FastAPI):
         settings.ai_model,
         settings.ai_timeout_s,
         settings.ai_max_output_tokens,
+        fallbacks=fallbacks,
     )
-
     app.state.analysis_cache = {}
 
     task = None
@@ -429,15 +444,16 @@ async def ai_chat(body: ChatIn, request: Request):
             now,
         )
 
-        reply = await app.state.ai.complete(prompt, messages)
+        result = await app.state.ai.complete_result(prompt, messages)
 
     except ai_mod.AiError as error:
         return _ai_error(error)
 
     return {
-        "reply": reply,
+        "reply": result.text,
         "generated_at": now,
-        "model": app.state.ai.model,
+        "provider": result.provider,
+        "model": result.model,
         "data_quotes": len(facts["quotes"]),
     }
 
@@ -511,7 +527,8 @@ async def ai_analysis(body: AnalysisIn, request: Request):
             "ai": {
                 "status": "ok",
                 "text": cached["text"],
-                "model": app.state.ai.model,
+                "provider": cached.get("provider"),
+                "model": cached.get("model"),
                 "cached": True,
             },
         }
@@ -541,10 +558,11 @@ async def ai_analysis(body: AnalysisIn, request: Request):
             now,
         )
 
-        text = await app.state.ai.complete(
+        result = await app.state.ai.complete_result(
             prompt,
             [{"role": "user", "content": task}],
         )
+        text = result.text
 
     except ai_mod.AiError as error:
         return {
@@ -560,6 +578,8 @@ async def ai_analysis(body: AnalysisIn, request: Request):
     cache[cache_key] = {
         "ts": now,
         "text": text,
+        "provider": result.provider,
+        "model": result.model,
     }
     while len(cache) > 128:
         oldest = min(cache, key=lambda key: cache[key]["ts"])
@@ -571,7 +591,8 @@ async def ai_analysis(body: AnalysisIn, request: Request):
         "ai": {
             "status": "ok",
             "text": text,
-            "model": app.state.ai.model,
+            "provider": result.provider,
+            "model": result.model,
             "cached": False,
         },
     }

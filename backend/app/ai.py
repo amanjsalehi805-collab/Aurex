@@ -2,6 +2,7 @@
 import json
 import math
 import time
+from dataclasses import dataclass
 from urllib.parse import urlsplit
 
 MAX_MESSAGES = 20
@@ -23,8 +24,15 @@ class AiError(Exception):
         self.status = status
 
 
+@dataclass
+class AiResult:
+    text: str
+    provider: str
+    model: str
+
+
 def is_configured(provider, api_key, base_url, model) -> bool:
-    if provider not in ("openai", "anthropic"):
+    if provider not in ("openai", "anthropic", "gemini", "groq", "openrouter"):
         return False
     if not all(
         isinstance(v, str) and v.strip()
@@ -233,23 +241,46 @@ class AiService:
         model: str,
         timeout_s: float,
         max_tokens: int,
+        fallbacks: list[dict] | None = None,
     ):
-        self.provider = provider.strip() if isinstance(provider, str) else ""
-        self.api_key = api_key.strip() if isinstance(api_key, str) else ""
-        self.base_url = base_url.strip().rstrip("/") if isinstance(base_url, str) else ""
-        self.model = model.strip() if isinstance(model, str) else ""
         self.timeout_s = timeout_s
         self.max_tokens = max_tokens
+
+        self.providers = []
+        candidates = [{
+            "provider": provider,
+            "api_key": api_key,
+            "base_url": base_url,
+            "model": model,
+        }]
+        if isinstance(fallbacks, list):
+            candidates.extend(fallbacks[:2])
+
+        for item in candidates:
+            if not isinstance(item, dict):
+                continue
+            values = {
+                "provider": item.get("provider", ""),
+                "api_key": item.get("api_key", ""),
+                "base_url": item.get("base_url", ""),
+                "model": item.get("model", ""),
+            }
+            for key, value in values.items():
+                values[key] = value.strip() if isinstance(value, str) else ""
+
+            if is_configured(**values):
+                self.providers.append(values)
+
+        primary = self.providers[0] if self.providers else {}
+        self.provider = primary.get("provider", "")
+        self.api_key = primary.get("api_key", "")
+        self.base_url = primary.get("base_url", "").rstrip("/")
+        self.model = primary.get("model", "")
 
     @property
     def configured(self) -> bool:
         return (
-            is_configured(
-                self.provider,
-                self.api_key,
-                self.base_url,
-                self.model,
-            )
+            bool(self.providers)
             and isinstance(self.timeout_s, (int, float))
             and 1 <= self.timeout_s <= 120
             and isinstance(self.max_tokens, int)
@@ -261,38 +292,46 @@ class AiService:
             "configured": self.configured,
             "provider": self.provider if self.configured else None,
             "model": self.model if self.configured else None,
+            "providers": [
+                item["provider"] for item in self.providers
+            ] if self.configured else [],
         }
 
-    async def complete(self, system: str, messages: list[dict]) -> str:
-        if not self.configured:
-            raise AiError("ai_not_configured", 503)
-
-        messages = validate_messages(messages)
-
+    async def _complete_with_provider(
+        self,
+        config: dict,
+        system: str,
+        messages: list[dict],
+    ) -> str:
         import httpx
 
-        if self.provider == "anthropic":
-            url = f"{self.base_url}/v1/messages"
+        provider = config["provider"]
+        base_url = config["base_url"].rstrip("/")
+        api_key = config["api_key"]
+        model = config["model"]
+
+        if provider == "anthropic":
+            url = f"{base_url}/v1/messages"
             headers = {
-                "x-api-key": self.api_key,
+                "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json",
             }
             body = {
-                "model": self.model,
+                "model": model,
                 "max_tokens": self.max_tokens,
                 "system": system,
                 "messages": messages,
             }
             parse = parse_anthropic
         else:
-            url = f"{self.base_url}/chat/completions"
+            url = f"{base_url}/chat/completions"
             headers = {
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": f"Bearer {api_key}",
                 "content-type": "application/json",
             }
             body = {
-                "model": self.model,
+                "model": model,
                 "max_tokens": self.max_tokens,
                 "messages": [
                     {"role": "system", "content": system},
@@ -325,3 +364,35 @@ class AiService:
             raise AiError("ai_bad_response")
 
         return parse(data)
+
+    async def complete_result(
+        self,
+        system: str,
+        messages: list[dict],
+    ) -> AiResult:
+        if not self.configured:
+            raise AiError("ai_not_configured", 503)
+
+        safe_messages = validate_messages(messages)
+        last_error = None
+
+        for config in self.providers:
+            try:
+                answer = await self._complete_with_provider(
+                    config, system, safe_messages
+                )
+                return AiResult(
+                    text=answer,
+                    provider=config["provider"],
+                    model=config["model"],
+                )
+            except AiError as exc:
+                last_error = exc
+
+        if last_error:
+            raise last_error
+        raise AiError("ai_unavailable", 503)
+
+    async def complete(self, system: str, messages: list[dict]) -> str:
+        result = await self.complete_result(system, messages)
+        return result.text

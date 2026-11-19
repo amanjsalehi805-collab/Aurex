@@ -33,6 +33,17 @@ class Settings(BaseSettings):
     ai_rate_limit_per_min: int = 10
     analysis_cache_ttl_s: int = 600
 
+    # --- AI fallback providers ---
+    ai_fallback_1_provider: str = ""
+    ai_fallback_1_api_key: str = ""
+    ai_fallback_1_base_url: str = ""
+    ai_fallback_1_model: str = ""
+
+    ai_fallback_2_provider: str = ""
+    ai_fallback_2_api_key: str = ""
+    ai_fallback_2_base_url: str = ""
+    ai_fallback_2_model: str = ""
+
     # --- History and stocks ---
     history_db_path: str = "data/aurex.db"
     history_min_interval_s: int = 300
