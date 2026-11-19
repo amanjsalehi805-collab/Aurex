@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 
 import httpx
@@ -34,7 +35,9 @@ class AlphaVantageProvider(Provider):
         self.missing_assets = []
 
         async with httpx.AsyncClient(timeout=self.timeout_s) as client:
-            for symbol, (asset_id, kind) in self.METALS.items():
+            for index, (symbol, (asset_id, kind)) in enumerate(self.METALS.items()):
+                if index:
+                    await asyncio.sleep(1.1)
                 try:
                     response = await client.get(
                         "https://www.alphavantage.co/query",
