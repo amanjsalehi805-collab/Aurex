@@ -59,6 +59,9 @@ class AlphaVantageProvider(Provider):
                         or payload.get("Note")
                     )
                     if api_error:
+                        if "invalid symbol" in str(api_error).lower():
+                            missing_assets.append(asset_id)
+                            continue
                         raise ProviderError(
                             f"Alpha Vantage response: {str(api_error)[:160]}"
                         )
