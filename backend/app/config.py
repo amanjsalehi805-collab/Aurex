@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     aurex_env: str = "prod"
     talasanj_api_key: str = ""
+    talasanj_api_key_backup: str = ""
     talasanj_base_url: str = "https://talasanj.info/api/v1"
     talasanj_min_interval_s: float = 60.0
     http_timeout_s: float = 10.0

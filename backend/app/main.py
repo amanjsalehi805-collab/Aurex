@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     s = get_settings()
     talasanj = TalasanjProvider(
         s.talasanj_api_key, s.talasanj_base_url, s.talasanj_min_interval_s,
-        s.http_timeout_s, s.http_retries)
+        s.http_timeout_s, s.http_retries, s.talasanj_api_key_backup)
     app.state.talasanj = talasanj
     app.state.registry = Registry([talasanj], s)  # add providers here, in priority order
     yield
