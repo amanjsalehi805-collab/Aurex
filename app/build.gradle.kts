@@ -22,8 +22,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("aurex-release.jks")
+            storePassword = System.getenv("AUREX_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("AUREX_KEY_ALIAS")
+            keyPassword = System.getenv("AUREX_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
-        release { isMinifyEnabled = false }
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+        }
     }
 }
 

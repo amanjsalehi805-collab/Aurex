@@ -10,3 +10,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 backend/config/talasanj_raw*.json
+
+aurex-keystore-base64.txt
