@@ -63,21 +63,32 @@ class NerkhAraProvider(Provider):
         }
 
         quotes = []
+        skipped = {}
+
+        def skip(reason):
+            skipped[reason] = skipped.get(reason, 0) + 1
         for source_id, spec in self.ASSETS.items():
             item = by_id.get(source_id)
-            if not item or item.get("stale") is True:
+            if not item:
+                skip("missing_asset")
+                continue
+            if item.get("stale") is True:
+                skip("source_marks_stale")
                 continue
 
             try:
                 price = float(item["price"])
                 if not (price > 0 and price < float("inf")):
+                    skip("invalid_price")
                     continue
 
                 if str(item.get("unit", "")).upper() != spec[3].value:
+                    skip("unit_mismatch")
                     continue
 
                 raw_ts = item.get("updated_utc")
                 if not isinstance(raw_ts, str):
+                    skip("missing_timestamp")
                     continue
 
                 source_ts = datetime.fromisoformat(
@@ -87,7 +98,11 @@ class NerkhAraProvider(Provider):
                     source_ts = source_ts.replace(tzinfo=timezone.utc)
 
                 age = (now - source_ts).total_seconds()
-                if age < -300 or age > self.stale_after_s:
+                if age < -300:
+                    skip("future_timestamp")
+                    continue
+                if age > self.stale_after_s:
+                    skip("stale_timestamp")
                     continue
 
                 change_pct = item.get("change_pct")
@@ -109,10 +124,11 @@ class NerkhAraProvider(Provider):
                         fetched_at=now,
                     )
                 )
-            except (KeyError, TypeError, ValueError, OverflowError):
+            except (KeyError, TypeError, ValueError, OverflowError) as exc:
+                skip(f"invalid_fields:{type(exc).__name__}")
                 continue
 
         if not quotes:
-            raise ProviderError("NerkhAra returned no fresh supported quotes")
+            raise ProviderError(f"NerkhAra returned no fresh supported quotes; skipped={skipped}")
 
         return quotes
