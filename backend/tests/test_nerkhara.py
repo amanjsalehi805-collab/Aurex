@@ -4,7 +4,7 @@ import pytest
 
 from app.config import Settings
 from app.models import Market, Quote, Unit
-from app.providers.base import Provider
+from app.providers.base import Provider, ProviderError
 from app.providers.nerkhara import NerkhAraProvider
 from app.registry import Registry
 
@@ -91,6 +91,79 @@ async def test_nerkhara_rejects_old_dataset(monkeypatch):
 
     with pytest.raises(Exception, match="no fresh supported quotes"):
         await provider._fetch()
+
+
+@pytest.mark.asyncio
+async def test_nerkhara_reports_http_status(monkeypatch):
+    import httpx
+
+    class ErrorResponse:
+        def raise_for_status(self):
+            request = httpx.Request("GET", "https://example.com/latest.json")
+            response = httpx.Response(503, request=request)
+            raise httpx.HTTPStatusError(
+                "Service unavailable", request=request, response=response
+            )
+
+    monkeypatch.setattr(
+        "app.providers.nerkhara.httpx.AsyncClient",
+        lambda **kwargs: FakeClient(ErrorResponse()),
+    )
+
+    provider = NerkhAraProvider("https://example.com", 600, 10, 900)
+
+    with pytest.raises(ProviderError, match="HTTP 503"):
+        await provider._fetch()
+
+
+@pytest.mark.asyncio
+async def test_nerkhara_rejects_invalid_json(monkeypatch):
+    class InvalidJSONResponse(FakeResponse):
+        def json(self):
+            raise ValueError("invalid JSON")
+
+    monkeypatch.setattr(
+        "app.providers.nerkhara.httpx.AsyncClient",
+        lambda **kwargs: FakeClient(InvalidJSONResponse({})),
+    )
+
+    provider = NerkhAraProvider("https://example.com", 600, 10, 900)
+
+    with pytest.raises(ProviderError, match="invalid JSON"):
+        await provider._fetch()
+
+
+@pytest.mark.asyncio
+async def test_nerkhara_skips_invalid_assets_and_keeps_valid_quote(monkeypatch):
+    now = datetime.now(timezone.utc)
+    recent = (now - timedelta(minutes=2)).isoformat()
+    future = (now + timedelta(minutes=10)).isoformat()
+
+    payload = {
+        "stale": False,
+        "items": [
+            {"id": "usd", "price": 270000, "unit": "IRT",
+             "updated_utc": recent, "stale": False},
+            {"id": "eur", "price": 0, "unit": "IRT",
+             "updated_utc": recent, "stale": False},
+            {"id": "xau", "price": 3600, "unit": "EUR",
+             "updated_utc": recent, "stale": False},
+            {"id": "xag", "price": 42, "unit": "USD",
+             "updated_utc": future, "stale": False},
+        ],
+    }
+
+    monkeypatch.setattr(
+        "app.providers.nerkhara.httpx.AsyncClient",
+        lambda **kwargs: FakeClient(FakeResponse(payload)),
+    )
+
+    provider = NerkhAraProvider("https://example.com", 600, 10, 900)
+    quotes = await provider._fetch()
+
+    assert len(quotes) == 1
+    assert quotes[0].asset_id == "usd_free_irt"
+    assert quotes[0].price == 270000
 
 
 class StaticProvider(Provider):
