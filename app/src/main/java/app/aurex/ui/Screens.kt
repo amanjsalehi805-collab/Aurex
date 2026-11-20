@@ -155,6 +155,7 @@ fun AurexApp(
                     state = dashboardState,
                     onRefresh = { dashboardViewModel.refresh() },
                     onToggleFavorite = { dashboardViewModel.toggleFavorite(it) },
+                    onMoveFavorite = { assetId, offset -> dashboardViewModel.moveFavorite(assetId, offset) },
                     onOpenAsset = openAsset,
                 )
             }

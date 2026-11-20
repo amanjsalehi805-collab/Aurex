@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name" translatable="false">AUREX</string>
     <string name="tagline">BEYOND THE MARKETS</string>
@@ -82,6 +82,10 @@
     <string name="stocks_connected_note">A stock data source is connected on the server. Stock screens will arrive in a later update.</string>
     <string name="stocks_symbols_count">Registered symbols: %1$s</string>
     <string name="stocks_unreachable">Could not check the stock service.</string>
+    <string name="unit_gram">gram</string>
+    <string name="unit_coin">coin</string>
+    <string name="unit_troy_oz">troy oz</string>
+    <string name="converter_same_asset">The selected assets are the same; the amount is unchanged.</string>
     <string name="converter_title">Currency converter</string>
     <string name="converter_from">From</string>
     <string name="converter_to">To</string>
@@ -93,8 +97,8 @@
     <string name="converter_currency_unavailable">%1$s: rate unavailable</string>
     <string name="converter_rate_title">Rate used</string>
     <string name="converter_rate">1 %1$s = %2$s %3$s</string>
-    <string name="converter_stale_warning">This rate is old or comes from the offline cache. Refresh before relying on it.</string>
-    <string name="converter_hint">Uses the free-market rate from the AUREX server. The unit is Toman, not Rial.</string>
+    <string name="converter_stale_warning">One or more rates may be delayed, old, or from the offline cache. Refresh before relying on them.</string>
+    <string name="converter_hint">Converts using available AUREX market quotes. Gold 18k is per gram; global metals are priced per troy ounce. Toman is not Rial.</string>
     <string name="home_ai_title">AI market analysis</string>
     <string name="home_ai_body">Tap to see an analysis built from the real data.</string>
     <string name="ai_tab_assistant">Assistant</string>
@@ -169,4 +173,6 @@
     <string name="widget_offline">Offline: saved prices</string>
     <string name="widget_old">Old data</string>
     <string name="widget_no_data">No data yet. Open AUREX.</string>
+    <string name="watchlist_move_up">Move up</string>
+    <string name="watchlist_move_down">Move down</string>
 </resources>

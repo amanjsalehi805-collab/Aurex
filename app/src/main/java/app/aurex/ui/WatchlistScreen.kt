@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,9 +29,10 @@ fun WatchlistScreen(
     state: DashboardState,
     onRefresh: () -> Unit,
     onToggleFavorite: (String) -> Unit,
+    onMoveFavorite: (String, Int) -> Unit,
     onOpenAsset: (String) -> Unit,
 ) {
-    val favorites = MarketWatchAssets.filter { it.id in state.favorites }
+    val favorites = state.favorites.mapNotNull { id -> MarketWatchAssets.find { it.id == id } }
     val available = MarketWatchAssets.filter { it.id !in state.favorites }
 
     LazyColumn(
@@ -60,13 +62,17 @@ fun WatchlistScreen(
                 }
             }
         } else {
-            items(favorites, key = { "fav_" + it.id }) { asset ->
+            itemsIndexed(favorites, key = { _, asset -> "fav_" + asset.id }) { index, asset ->
                 WatchlistAssetRow(
                     nameRes = asset.nameRes,
                     quote = state.quotes[asset.id],
                     freshness = state.quotes[asset.id]?.let { state.freshnessOf(it) },
                     loading = state.loading && state.quotes.isEmpty(),
                     isFavorite = true,
+                    canMoveUp = index > 0,
+                    canMoveDown = index < favorites.lastIndex,
+                    onMoveUp = { onMoveFavorite(asset.id, -1) },
+                    onMoveDown = { onMoveFavorite(asset.id, 1) },
                     onToggle = { onToggleFavorite(asset.id) },
                     onOpen = { onOpenAsset(asset.id) },
                 )
@@ -97,6 +103,10 @@ private fun WatchlistAssetRow(
     freshness: String?,
     loading: Boolean,
     isFavorite: Boolean,
+    canMoveUp: Boolean = false,
+    canMoveDown: Boolean = false,
+    onMoveUp: () -> Unit = {},
+    onMoveDown: () -> Unit = {},
     onToggle: () -> Unit,
     onOpen: () -> Unit,
 ) {
@@ -114,12 +124,26 @@ private fun WatchlistAssetRow(
                         UnavailableText(loading)
                     }
                 }
-                TextButton(onClick = onToggle) {
-                    Text(
-                        stringResource(
-                            if (isFavorite) R.string.watchlist_remove else R.string.watchlist_add
-                        )
-                    )
+                if (isFavorite) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row {
+                            TextButton(
+                                onClick = onMoveUp,
+                                enabled = canMoveUp,
+                            ) { Text(stringResource(R.string.watchlist_move_up)) }
+                            TextButton(
+                                onClick = onMoveDown,
+                                enabled = canMoveDown,
+                            ) { Text(stringResource(R.string.watchlist_move_down)) }
+                        }
+                        TextButton(onClick = onToggle) {
+                            Text(stringResource(R.string.watchlist_remove))
+                        }
+                    }
+                } else {
+                    TextButton(onClick = onToggle) {
+                        Text(stringResource(R.string.watchlist_add))
+                    }
                 }
             }
 

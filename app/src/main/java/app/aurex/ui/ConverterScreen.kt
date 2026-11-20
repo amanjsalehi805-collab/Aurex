@@ -13,16 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,12 +39,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import app.aurex.R
+import app.aurex.data.MarketQuote
 import java.math.BigDecimal
 
 private const val USD_ID = "usd_free_irt"
-private const val EUR_ID = "eur_free_irt"
+private val CONVERTER_ASSET_IDS = listOf(
+    ConverterMath.TOMAN_ID,
+    ConverterMath.USD_ID,
+    ConverterMath.EUR_ID,
+    ConverterMath.GOLD18_ID,
+    ConverterMath.COIN_ID,
+    ConverterMath.GLOBAL_GOLD_ID,
+    ConverterMath.GLOBAL_SILVER_ID,
+)
 
 @Composable
 fun ConverterScreen(
@@ -54,27 +65,61 @@ fun ConverterScreen(
 ) {
     val colors = LocalAurexColors.current
     val locale = LocalAppLocale.current
+    var input by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
+    var sourceId by rememberSaveable { mutableStateOf(USD_ID) }
+    var targetId by rememberSaveable { mutableStateOf(ConverterMath.TOMAN_ID) }
 
-    var input by rememberSaveable { mutableStateOf("") }
-    var foreignToToman by rememberSaveable { mutableStateOf(true) }
-    var currency by rememberSaveable { mutableStateOf("usd") }
+    fun validQuote(id: String): MarketQuote? {
+        val expectedUnit =
+            if (id == ConverterMath.GLOBAL_GOLD_ID || id == ConverterMath.GLOBAL_SILVER_ID) "USD" else "IRT"
+        return state.quotes[id]?.takeIf {
+            it.price.isFinite() && it.price > 0.0 && it.unit.trim().uppercase() == expectedUnit
+        }
+    }
 
-    // Only a quote that is explicitly in IRT (Toman) may be used as a rate.
-    fun rateQuote(id: String) = state.quotes[id]?.takeIf { it.unit == "IRT" && it.price > 0 }
-    val usdQuote = rateQuote(USD_ID)
-    val eurQuote = rateQuote(EUR_ID)
-    val quote = if (currency == "eur") eurQuote else usdQuote
+    val usdQuote = validQuote(USD_ID)
+    val usdToToman = usdQuote?.let { BigDecimal.valueOf(it.price) }
+    val sourceQuote = if (sourceId == ConverterMath.TOMAN_ID) null else validQuote(sourceId)
+    val targetQuote = if (targetId == ConverterMath.TOMAN_ID) null else validQuote(targetId)
 
-    val foreignName = stringResource(if (currency == "eur") R.string.unit_eur else R.string.unit_usd)
-    val tomanName = stringResource(R.string.unit_irt)
+    fun valueInToman(id: String): BigDecimal? {
+        val quote = validQuote(id)
+        return ConverterMath.valueInToman(
+            assetId = id,
+            quotePrice = quote?.let { BigDecimal.valueOf(it.price) },
+            quoteUnit = quote?.unit,
+            usdToToman = usdToToman,
+        )
+    }
 
-    val amount = ConverterMath.parseAmount(input)
-    val rate = quote?.let { BigDecimal.valueOf(it.price) }
-    val result = if (amount != null && rate != null) ConverterMath.convert(amount, rate, foreignToToman) else null
+    val sourceValue = valueInToman(sourceId)
+    val targetValue = valueInToman(targetId)
+    val amount = ConverterMath.parseAmount(input.text)
+    val result = when {
+        amount == null -> null
+        sourceId == targetId -> amount
+        sourceValue != null && targetValue != null ->
+            ConverterMath.convertAssets(amount, sourceValue, targetValue)
+        else -> null
+    }
+
+    val needsUsdCrossRate =
+        sourceId == ConverterMath.GLOBAL_GOLD_ID ||
+        sourceId == ConverterMath.GLOBAL_SILVER_ID ||
+        targetId == ConverterMath.GLOBAL_GOLD_ID ||
+        targetId == ConverterMath.GLOBAL_SILVER_ID
+
+    val usedQuotes = listOfNotNull(
+        sourceQuote,
+        targetQuote,
+        if (needsUsdCrossRate) usdQuote else null,
+    ).distinctBy { it.assetId }
+    val hasStaleQuote = usedQuotes.any {
+        state.freshnessOf(it) in setOf("delayed", "stale", "cached")
+    }
 
     Column(
-        Modifier
-            .fillMaxSize()
+        Modifier.fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -101,69 +146,51 @@ fun ConverterScreen(
             }
         }
 
-        // Currency choice. EUR is offered only when the server really has a rate for it.
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            FilterChip(
-                selected = currency == "usd",
-                onClick = { currency = "usd" },
-                label = { Text(stringResource(R.string.unit_usd)) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = colors.gold.copy(alpha = 0.18f),
-                    selectedLabelColor = colors.gold,
-                ),
-            )
-            FilterChip(
-                selected = currency == "eur",
-                onClick = { currency = "eur" },
-                enabled = eurQuote != null,
-                label = { Text(stringResource(R.string.unit_eur)) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = colors.gold.copy(alpha = 0.18f),
-                    selectedLabelColor = colors.gold,
-                ),
-            )
-            if (eurQuote == null) {
-                Text(
-                    stringResource(R.string.converter_currency_unavailable, stringResource(R.string.unit_eur)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.textSecondary,
-                )
-            }
-        }
-
         AurexCard(Modifier.fillMaxWidth(), borderColor = colors.gold.copy(alpha = 0.35f)) {
-            Column(Modifier.padding(16.dp)) {
-                Text(
-                    stringResource(R.string.converter_from),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.gold,
-                )
-                Spacer(Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = input,
-                    onValueChange = { input = it.take(24) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = input.isNotBlank() && amount == null,
-                    label = { Text(stringResource(R.string.converter_amount)) },
-                    suffix = { Text(if (foreignToToman) foreignName else tomanName) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                )
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.converter_from),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.gold,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        ConverterAssetSelector(sourceId, { sourceId = it }, Modifier.fillMaxWidth())
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.converter_to),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.gold,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        ConverterAssetSelector(targetId, { targetId = it }, Modifier.fillMaxWidth())
+                    }
+                }
 
-                Box(Modifier.fillMaxWidth().padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
-                    val swapDescription = stringResource(R.string.converter_swap)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Row(
-                        Modifier
-                            .size(44.dp)
+                        Modifier.size(42.dp)
                             .clip(CircleShape)
                             .background(colors.gold.copy(alpha = 0.12f))
                             .border(1.dp, colors.gold.copy(alpha = 0.5f), CircleShape)
-                            .clickable(onClickLabel = swapDescription) {
-                                // Keep the number that is on screen as the next input.
+                            .clickable {
+                                val oldSource = sourceId
+                                sourceId = targetId
+                                targetId = oldSource
                                 if (result != null) {
-                                    input = formatForInput(result, if (foreignToToman) 2 else 4)
+                                    val formatted = formatForInput(result)
+                                    input = formatGroupedInput(
+                                        TextFieldValue(formatted, selection = TextRange(formatted.length))
+                                    )
                                 }
-                                foreignToToman = !foreignToToman
                             },
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
@@ -174,18 +201,28 @@ fun ConverterScreen(
                 }
 
                 Text(
+                    stringResource(R.string.converter_amount),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.textSecondary,
+                )
+                OutlinedTextField(
+                    value = input,
+                    onValueChange = { input = formatGroupedInput(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = input.text.isNotBlank() && amount == null,
+                    label = { Text(converterAssetName(sourceId)) },
+                    suffix = { Text(converterUnitName(sourceId)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                )
+
+                Text(
                     stringResource(R.string.converter_to),
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.gold,
                 )
-                Spacer(Modifier.height(6.dp))
                 when {
-                    quote == null -> Text(
-                        stringResource(R.string.converter_rate_unavailable, foreignName),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.negative,
-                    )
-                    input.isBlank() -> Text(
+                    input.text.isBlank() -> Text(
                         stringResource(R.string.converter_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.textSecondary,
@@ -195,38 +232,77 @@ fun ConverterScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.negative,
                     )
-                    result != null -> {
-                        val shown = formatDecimal(result, if (foreignToToman) 2 else 4, locale)
-                        Text(
-                            shown + "  " + (if (foreignToToman) tomanName else foreignName),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    result == null -> Text(
+                        stringResource(
+                            R.string.converter_rate_unavailable,
+                            converterAssetName(
+                                when {
+                                    needsUsdCrossRate && usdQuote == null -> USD_ID
+                                    sourceValue == null -> sourceId
+                                    else -> targetId
+                                },
+                            ),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.negative,
+                    )
+                    else -> Text(
+                        "${formatDecimal(result, if (targetId == ConverterMath.TOMAN_ID) 2 else 8, locale)}  ${converterUnitName(targetId)}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                if (sourceId == targetId && amount != null) {
+                    Text(
+                        stringResource(R.string.converter_same_asset),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textSecondary,
+                    )
                 }
             }
         }
 
-        if (quote != null) {
+        if (usedQuotes.isNotEmpty()) {
             AurexCard(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    SpreadRow {
-                        Text(
-                            stringResource(R.string.converter_rate_title),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colors.gold,
-                        )
-                        FreshnessChip(state.freshnessOf(quote))
-                    }
-                    Spacer(Modifier.height(6.dp))
+                Column(
+                    Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     Text(
-                        stringResource(R.string.converter_rate, foreignName, formatPrice(quote.price, locale), tomanName),
-                        style = MaterialTheme.typography.bodyMedium,
+                        stringResource(R.string.converter_rate_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = colors.gold,
                     )
-                    Spacer(Modifier.height(6.dp))
-                    SourceLine(quote)
-                    if (state.freshnessOf(quote) in listOf("stale", "cached")) {
-                        Spacer(Modifier.height(8.dp))
+                    usedQuotes.forEach { quote ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            SpreadRow {
+                                Text(
+                                    converterAssetName(quote.assetId),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                FreshnessChip(state.freshnessOf(quote))
+                            }
+                            val quoteUnitName =
+                                if (quote.unit.trim().uppercase() == "USD") {
+                                    stringResource(R.string.unit_usd)
+                                } else {
+                                    stringResource(R.string.unit_irt)
+                                }
+                            Text(
+                                stringResource(
+                                    R.string.converter_rate,
+                                    "1 ${converterUnitName(quote.assetId)}",
+                                    formatPrice(quote.price, locale),
+                                    quoteUnitName,
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            SourceLine(quote)
+                        }
+                    }
+                    if (hasStaleQuote) {
                         Text(
                             stringResource(R.string.converter_stale_warning),
                             style = MaterialTheme.typography.labelSmall,
@@ -245,6 +321,110 @@ fun ConverterScreen(
     }
 }
 
-/** Plain digits/decimal point (no grouping) so the parser can read it back on swap. */
-private fun formatForInput(value: BigDecimal, maxFrac: Int): String =
-    value.setScale(maxFrac, java.math.RoundingMode.HALF_EVEN).stripTrailingZeros().toPlainString()
+@Composable
+private fun ConverterAssetSelector(
+    selectedId: String,
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = LocalAurexColors.current
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Box(modifier) {
+        Column(
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.elevated)
+                .border(1.dp, colors.textSecondary.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                .clickable { expanded = true }
+                .padding(horizontal = 10.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                converterAssetName(selectedId),
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 2,
+            )
+            Text(
+                converterUnitName(selectedId),
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.textSecondary,
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            CONVERTER_ASSET_IDS.forEach { id ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            converterAssetName(id),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    },
+                    onClick = {
+                        onSelect(id)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun converterAssetName(id: String): String =
+    if (id == ConverterMath.TOMAN_ID) {
+        stringResource(R.string.unit_irt)
+    } else {
+        stringResource(assetNameRes(id))
+    }
+
+@Composable
+private fun converterUnitName(id: String): String = stringResource(
+    when (id) {
+        ConverterMath.TOMAN_ID -> R.string.unit_irt
+        USD_ID -> R.string.unit_usd
+        ConverterMath.EUR_ID -> R.string.unit_eur
+        ConverterMath.GOLD18_ID -> R.string.unit_gram
+        ConverterMath.COIN_ID -> R.string.unit_coin
+        ConverterMath.GLOBAL_GOLD_ID, ConverterMath.GLOBAL_SILVER_ID -> R.string.unit_troy_oz
+        else -> R.string.unavailable
+    },
+)
+
+
+private fun formatGroupedInput(value: TextFieldValue): TextFieldValue {
+    val normalized = ConverterMath.normalize(value.text)
+    if (normalized.count { it == '.' } > 1) return value
+
+    val candidate = normalized.filter { it.isDigit() || it == '.' }.take(32)
+    val oldCursor = value.selection.start.coerceIn(0, value.text.length)
+    val beforeCursor = ConverterMath.normalize(value.text.take(oldCursor))
+    val digitsBefore = beforeCursor.count { it.isDigit() }
+    val decimalBefore = beforeCursor.contains('.')
+    val fractionDigitsBefore = beforeCursor.substringAfter('.', "").count { it.isDigit() }
+
+    val parts = candidate.split('.', limit = 2)
+    val integer = parts[0]
+    val groupedInteger = integer.reversed().chunked(3).joinToString(",").reversed()
+    val formatted = groupedInteger +
+        if (candidate.contains('.')) "." + parts.getOrElse(1) { "" } else ""
+
+    val cursor = if (decimalBefore && formatted.contains('.')) {
+        (formatted.indexOf('.') + 1 + fractionDigitsBefore).coerceAtMost(formatted.length)
+    } else {
+        var seen = 0
+        var position = 0
+        while (position < formatted.length && seen < digitsBefore) {
+            if (formatted[position].isDigit()) seen++
+            position++
+        }
+        position
+    }
+
+    return TextFieldValue(formatted, selection = TextRange(cursor))
+}
+
+private fun formatForInput(value: BigDecimal): String =
+    value.stripTrailingZeros().toPlainString()

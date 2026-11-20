@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="tagline">فراتر از بازارها</string>
     <string name="nav_home">خانه</string>
@@ -81,6 +81,10 @@
     <string name="stocks_connected_note">یک منبع داده سهام روی سرور متصل است. صفحه‌های سهام در به‌روزرسانی بعدی می‌آید.</string>
     <string name="stocks_symbols_count">نمادهای ثبت‌شده: %1$s</string>
     <string name="stocks_unreachable">بررسی سرویس سهام ممکن نشد.</string>
+    <string name="unit_gram">گرم</string>
+    <string name="unit_coin">عدد سکه</string>
+    <string name="unit_troy_oz">اونس تروا</string>
+    <string name="converter_same_asset">دارایی مبدأ و مقصد یکسان است؛ مبلغ تغییری نمی‌کند.</string>
     <string name="converter_title">مبدل ارز</string>
     <string name="converter_from">از</string>
     <string name="converter_to">به</string>
@@ -92,8 +96,8 @@
     <string name="converter_currency_unavailable">%1$s: نرخ در دسترس نیست</string>
     <string name="converter_rate_title">نرخ استفاده‌شده</string>
     <string name="converter_rate">۱ %1$s = %2$s %3$s</string>
-    <string name="converter_stale_warning">این نرخ قدیمی است یا از حافظه آفلاین آمده است. پیش از اتکا، به‌روزرسانی کنید.</string>
-    <string name="converter_hint">از نرخ بازار آزاد سرور AUREX استفاده می‌کند. واحد، تومان است نه ریال.</string>
+    <string name="converter_stale_warning">ممکن است یک یا چند نرخ با تأخیر باشند، قدیمی شده باشند یا از حافظه آفلاین آمده باشند. پیش از اتکا، به‌روزرسانی کنید.</string>
+    <string name="converter_hint">تبدیل بر پایه نرخ‌های موجود در AUREX انجام می‌شود. طلای ۱۸ عیار به‌ازای هر گرم و فلزات جهانی به‌ازای هر اونس تروا هستند. تومان با ریال متفاوت است.</string>
     <string name="home_ai_title">تحلیل هوشمند بازار</string>
     <string name="home_ai_body">برای دیدن تحلیلی که بر پایه داده‌های واقعی ساخته می‌شود لمس کنید.</string>
     <string name="ai_tab_assistant">دستیار</string>
@@ -168,4 +172,6 @@
     <string name="widget_offline">آفلاین: قیمت‌های ذخیره‌شده</string>
     <string name="widget_old">داده قدیمی</string>
     <string name="widget_no_data">هنوز داده‌ای نیست. AUREX را باز کنید.</string>
+    <string name="watchlist_move_up">انتقال به بالا</string>
+    <string name="watchlist_move_down">انتقال به پایین</string>
 </resources>

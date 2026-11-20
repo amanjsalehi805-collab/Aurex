@@ -36,7 +36,7 @@ data class DashboardState(
     val quotes: Map<String, MarketQuote> = emptyMap(),
     val unavailable: Set<String> = emptySet(),
     val staleAfterSeconds: Long = 900L,
-    val favorites: Set<String> = emptySet(),
+    val favorites: List<String> = emptyList(),
     val loading: Boolean = true,
     /** Stable error code from [ApiException] (e.g. "network", "timeout"). */
     val error: String? = null,
@@ -115,6 +115,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         val currentlyFavorite = assetId in _state.value.favorites
         viewModelScope.launch {
             preferences.setFavorite(assetId, !currentlyFavorite)
+        }
+    }
+
+    fun moveFavorite(assetId: String, offset: Int) {
+        viewModelScope.launch {
+            preferences.moveFavorite(assetId, offset)
         }
     }
 

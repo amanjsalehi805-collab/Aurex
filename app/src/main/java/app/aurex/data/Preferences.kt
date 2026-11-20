@@ -61,16 +61,16 @@ class PreferencesRepository(private val context: Context) {
         )
     }
 
-    val favorites: Flow<Set<String>> = context.dataStore.data.map { prefs ->
+    val favorites: Flow<List<String>> = context.dataStore.data.map { prefs ->
         runCatching {
             val json = JSONArray(prefs[favoritesKey] ?: "[]")
-            buildSet {
+            buildList {
                 for (i in 0 until json.length()) {
                     val id = json.optString(i)
-                    if (id.isNotBlank()) add(id)
+                    if (id.isNotBlank() && id !in this) add(id)
                 }
             }
-        }.getOrDefault(emptySet())
+        }.getOrDefault(emptyList())
     }
 
     suspend fun setTheme(theme: ThemeId) {
@@ -93,19 +93,27 @@ class PreferencesRepository(private val context: Context) {
 
     suspend fun setFavorite(assetId: String, favorite: Boolean) {
         context.dataStore.edit { prefs ->
-            val current = runCatching {
-                val json = JSONArray(prefs[favoritesKey] ?: "[]")
-                buildSet {
-                    for (i in 0 until json.length()) {
-                        json.optString(i).takeIf { it.isNotBlank() }?.let(::add)
-                    }
-                }
-            }.getOrDefault(emptySet())
+            val current = readFavoriteIds(prefs[favoritesKey])
+            if (favorite) {
+                if (assetId !in current) current.add(assetId)
+            } else {
+                current.remove(assetId)
+            }
+            prefs[favoritesKey] = JSONArray(current).toString()
+        }
+    }
 
-            val updated = current.toMutableSet()
-            if (favorite) updated.add(assetId) else updated.remove(assetId)
-
-            prefs[favoritesKey] = JSONArray(updated.sorted()).toString()
+    suspend fun moveFavorite(assetId: String, offset: Int) {
+        if (offset == 0) return
+        context.dataStore.edit { prefs ->
+            val current = readFavoriteIds(prefs[favoritesKey])
+            val from = current.indexOf(assetId)
+            val to = from + offset
+            if (from >= 0 && to in current.indices) {
+                val item = current.removeAt(from)
+                current.add(to, item)
+                prefs[favoritesKey] = JSONArray(current).toString()
+            }
         }
     }
 
@@ -177,3 +185,15 @@ class PreferencesRepository(private val context: Context) {
 
 private fun JSONObject.cacheStringOrNull(key: String): String? =
     if (!has(key) || isNull(key)) null else optString(key)
+
+private fun readFavoriteIds(raw: String?): MutableList<String> {
+    return runCatching {
+        val json = JSONArray(raw ?: "[]")
+        buildList {
+            for (i in 0 until json.length()) {
+                val id = json.optString(i)
+                if (id.isNotBlank() && id !in this) add(id)
+            }
+        }.toMutableList()
+    }.getOrDefault(mutableListOf())
+}

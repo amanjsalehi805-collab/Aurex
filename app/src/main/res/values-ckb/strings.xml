@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="tagline">لەودیوی بازاڕەکانەوە</string>
     <string name="nav_home">سەرەکی</string>
@@ -81,6 +81,10 @@
     <string name="stocks_connected_note">سەرچاوەیەکی داتای پشک لەسەر سێرڤەر بەستراوەتەوە. پەڕەکانی پشک لە نوێکردنەوەی داهاتوودا دێن.</string>
     <string name="stocks_symbols_count">هێمای تۆمارکراو: %1$s</string>
     <string name="stocks_unreachable">پشکنینی خزمەتگوزاریی پشک نەگونجا.</string>
+    <string name="unit_gram">گرام</string>
+    <string name="unit_coin">دانە سکە</string>
+    <string name="unit_troy_oz">ئۆنسی ترۆیا</string>
+    <string name="converter_same_asset">داراییی سەرچاوە و مەبەست یەکسانن؛ بڕەکە ناگۆڕێت.</string>
     <string name="converter_title">گۆڕەری دراو</string>
     <string name="converter_from">لە</string>
     <string name="converter_to">بۆ</string>
@@ -92,8 +96,8 @@
     <string name="converter_currency_unavailable">%1$s: نرخ بەردەست نییە</string>
     <string name="converter_rate_title">نرخی بەکارهاتوو</string>
     <string name="converter_rate">١ %1$s = %2$s %3$s</string>
-    <string name="converter_stale_warning">ئەم نرخە کۆنە یان لە بیرگەی ئۆفڵاینەوەیە. پێش پشتبەستن نوێی بکەرەوە.</string>
-    <string name="converter_hint">نرخی بازاڕی ئازادی سێرڤەری AUREX بەکاردەهێنێت. یەکە تمەنە، نەک ڕیاڵ.</string>
+    <string name="converter_stale_warning">لەوانەیە هەندێک نرخ دوا بکەون، کۆن بن یان لە بیرگەی ئۆفڵاینەوە هاتبن. پێش پشتبەستن نوێیان بکەرەوە.</string>
+    <string name="converter_hint">گۆڕین بە پشتبەستن بە نرخە بەردەستەکانی AUREX ئەنجام دەدرێت. زێڕی ١٨ عەیار بۆ هەر گرامێکە و کانزاکانی جیهانی بۆ هەر ئۆنسێکی ترۆیایە. تمەن جیاوازە لە ڕیاڵ.</string>
     <string name="home_ai_title">شیکاریی زیرەکی بازاڕ</string>
     <string name="home_ai_body">بۆ بینینی شیکارییەک کە لەسەر داتای ڕاستەقینە دروست دەکرێت دەست لێبدە.</string>
     <string name="ai_tab_assistant">یاریدەدەر</string>
@@ -168,4 +172,6 @@
     <string name="widget_offline">ئۆفڵاین: نرخە پاشەکەوتکراوەکان</string>
     <string name="widget_old">داتای کۆن</string>
     <string name="widget_no_data">هێشتا داتا نییە. AUREX بکەرەوە.</string>
+    <string name="watchlist_move_up">گواستنەوە بۆ سەرەوە</string>
+    <string name="watchlist_move_down">گواستنەوە بۆ خوارەوە</string>
 </resources>
