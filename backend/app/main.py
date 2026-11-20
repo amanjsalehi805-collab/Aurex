@@ -16,6 +16,7 @@ from . import ai as ai_mod
 from .config import get_settings
 from .history import HistoryStore, summarize
 from .providers.base import ProviderError
+from .providers.nerkhara import NerkhAraProvider
 from .providers.talasanj import TalasanjProvider
 from .providers.twelvedata import TwelveDataProvider
 from .providers.alphavantage import AlphaVantageProvider
@@ -68,6 +69,13 @@ async def _collector_loop(app: FastAPI, interval: int):
 async def lifespan(app: FastAPI):
     settings = get_settings()
 
+    nerkhara = NerkhAraProvider(
+        settings.nerkhara_base_url,
+        settings.nerkhara_min_interval_s,
+        settings.http_timeout_s,
+        settings.stale_after_s,
+    )
+
     talasanj = TalasanjProvider(
         settings.talasanj_api_key,
         settings.talasanj_base_url,
@@ -77,7 +85,7 @@ async def lifespan(app: FastAPI):
         settings.talasanj_api_key_backup,
     )
 
-    providers = [talasanj]
+    providers = [nerkhara, talasanj]
 
     if settings.twelvedata_api_key:
         twelvedata = TwelveDataProvider(
@@ -99,6 +107,7 @@ async def lifespan(app: FastAPI):
         providers.append(alpha_vantage)
         app.state.alpha_vantage = alpha_vantage
 
+    app.state.nerkhara = nerkhara
     app.state.talasanj = talasanj
     app.state.registry = Registry(providers, settings)
 

@@ -33,26 +33,41 @@ class Registry:
         now = datetime.now(timezone.utc)
         chosen: dict[str, Quote] = {}
         warnings: list[str] = []
-        realtime_by_source: dict[str, bool] = {}
 
-        for p in self.providers:
-            realtime_by_source[p.name] = p.realtime
+        # Providers are ordered by preference. Invalid or stale quotes do not
+        # block a later provider from supplying the same asset.
+        for provider in self.providers:
             try:
-                quotes = await p.get_quotes()
-            except ProviderError as e:
-                warnings.append(f"{p.name} unavailable: {e}")
+                quotes = await provider.get_quotes()
+            except ProviderError as exc:
+                warnings.append(f"{provider.name} unavailable: {exc}")
                 continue
-            for q in quotes:
-                chosen.setdefault(q.asset_id, q.model_copy(deep=True))
 
-        final: list[Quote] = []
-        for asset_id, q in chosen.items():
-            try:
-                final.append(finalize_quote(
-                    q, now, self.settings.stale_after_s, self.settings.max_change_pct,
-                    realtime_by_source.get(q.source, False), self._last_known.get(asset_id)))
-            except ValueError as e:
-                warnings.append(f"{asset_id} rejected: {e}")
+            for quote in quotes:
+                if quote.asset_id in chosen:
+                    continue
+                try:
+                    candidate = finalize_quote(
+                        quote.model_copy(deep=True),
+                        now,
+                        self.settings.stale_after_s,
+                        self.settings.max_change_pct,
+                        provider.realtime,
+                        self._last_known.get(quote.asset_id),
+                    )
+                except ValueError as exc:
+                    warnings.append(f"{quote.asset_id} rejected: {exc}")
+                    continue
+
+                if candidate.freshness.value == "stale":
+                    warnings.append(
+                        f"{provider.name} quote for {quote.asset_id} is stale"
+                    )
+                    continue
+
+                chosen[quote.asset_id] = candidate
+
+        final = list(chosen.values())
         for q in final:
             self._last_known[q.asset_id] = q
 
