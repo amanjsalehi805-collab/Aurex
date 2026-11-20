@@ -44,8 +44,13 @@ class NerkhAraProvider(Provider):
                 response.raise_for_status()
                 payload = response.json()
         except (httpx.HTTPError, ValueError) as exc:
+            status = (
+                f"HTTP {exc.response.status_code}"
+                if isinstance(exc, httpx.HTTPStatusError)
+                else str(exc)
+            )
             raise ProviderError(
-                f"NerkhAra request failed: {type(exc).__name__}"
+                f"NerkhAra request failed: {type(exc).__name__}: {status}"
             ) from exc
 
         if not isinstance(payload, dict) or payload.get("stale") is True:
