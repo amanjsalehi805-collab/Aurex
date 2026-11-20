@@ -44,8 +44,6 @@ class Registry:
                 continue
 
             for quote in quotes:
-                if quote.asset_id in chosen:
-                    continue
                 try:
                     candidate = finalize_quote(
                         quote.model_copy(deep=True),
@@ -65,7 +63,17 @@ class Registry:
                     )
                     continue
 
-                chosen[quote.asset_id] = candidate
+                current = chosen.get(quote.asset_id)
+                if current is None:
+                    chosen[quote.asset_id] = candidate
+                elif (
+                    candidate.source_timestamp is not None
+                    and (
+                        current.source_timestamp is None
+                        or candidate.source_timestamp > current.source_timestamp
+                    )
+                ):
+                    chosen[quote.asset_id] = candidate
 
         final = list(chosen.values())
         for q in final:

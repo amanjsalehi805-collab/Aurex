@@ -212,3 +212,47 @@ async def test_registry_falls_back_when_first_provider_is_stale():
     assert usd.price == 270000
     assert usd.source == "Fallback"
     assert usd.freshness.value != "stale"
+
+
+@pytest.mark.asyncio
+async def test_registry_selects_newest_source_timestamp():
+    older = datetime.now(timezone.utc) - timedelta(minutes=4)
+    newer = datetime.now(timezone.utc) - timedelta(minutes=1)
+
+    first = StaticProvider(
+        "Primary", [make_quote("usd_free_irt", 260000, "Primary", older)]
+    )
+    second = StaticProvider(
+        "Fallback", [make_quote("usd_free_irt", 270000, "Fallback", newer)]
+    )
+
+    registry = Registry(
+        [first, second],
+        Settings(stale_after_s=900, max_change_pct=15),
+    )
+    result = await registry.quotes()
+    usd = next(q for q in result.quotes if q.asset_id == "usd_free_irt")
+
+    assert usd.source == "Fallback"
+    assert usd.price == 270000
+
+
+@pytest.mark.asyncio
+async def test_registry_timestamped_quote_beats_quote_without_timestamp():
+    recent = datetime.now(timezone.utc) - timedelta(minutes=1)
+    first = StaticProvider(
+        "Primary", [make_quote("usd_free_irt", 260000, "Primary", None)]
+    )
+    second = StaticProvider(
+        "Fallback", [make_quote("usd_free_irt", 270000, "Fallback", recent)]
+    )
+
+    registry = Registry(
+        [first, second],
+        Settings(stale_after_s=900, max_change_pct=15),
+    )
+    result = await registry.quotes()
+    usd = next(q for q in result.quotes if q.asset_id == "usd_free_irt")
+
+    assert usd.source == "Fallback"
+    assert usd.price == 270000
