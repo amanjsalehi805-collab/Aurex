@@ -52,15 +52,26 @@ async def _collect(app: FastAPI):
     return response
 
 
-async def _collector_loop(app: FastAPI, interval: int):
+async def _rates_collector_loop(app: FastAPI, interval: int):
     while True:
         try:
             await _collect(app)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            log.warning("rates collector error: %s", type(exc).__name__)
+
+        await asyncio.sleep(interval)
+
+
+async def _stocks_collector_loop(app: FastAPI, interval: int):
+    while True:
+        try:
             await app.state.stocks.refresh()
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            log.warning("collector error: %s", type(exc).__name__)
+            log.warning("stocks collector error: %s", type(exc).__name__)
 
         await asyncio.sleep(interval)
 
@@ -148,17 +159,22 @@ async def lifespan(app: FastAPI):
     )
     app.state.analysis_cache = {}
 
-    task = None
+    tasks = []
+    if settings.rates_collect_interval_s > 0:
+        tasks.append(asyncio.create_task(
+            _rates_collector_loop(app, settings.rates_collect_interval_s)
+        ))
     if settings.collect_interval_s > 0:
-        task = asyncio.create_task(
-            _collector_loop(app, settings.collect_interval_s)
-        )
+        tasks.append(asyncio.create_task(
+            _stocks_collector_loop(app, settings.collect_interval_s)
+        ))
 
     try:
         yield
     finally:
-        if task is not None:
+        for task in tasks:
             task.cancel()
+        for task in tasks:
             with suppress(asyncio.CancelledError):
                 await task
 

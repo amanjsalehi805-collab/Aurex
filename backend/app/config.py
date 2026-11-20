@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     alpha_vantage_api_key: str = ""
     alpha_vantage_min_interval_s: float = 43200.0
     nerkhara_base_url: str = "https://nerkhara.com/api/v1"
-    nerkhara_min_interval_s: float = 600.0
+    nerkhara_min_interval_s: float = 60.0
     talasanj_base_url: str = "https://talasanj.info/api/v1"
     talasanj_min_interval_s: float = 60.0
     http_timeout_s: float = 10.0
@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     history_db_path: str = "data/aurex.db"
     history_min_interval_s: int = 300
     history_retention_days: int = 90
+    rates_collect_interval_s: int = 60
     collect_interval_s: int = 300
     admin_token: str = ""
 
