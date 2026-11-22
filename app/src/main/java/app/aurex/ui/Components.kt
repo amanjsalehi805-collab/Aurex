@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -150,37 +151,64 @@ fun PriceChart(
     modifier: Modifier = Modifier,
     lineColor: Color = LocalAurexColors.current.gold,
 ) {
+    val segments = remember(points) { app.aurex.data.splitHistoryPoints(points) }
+    val validPoints = segments.flatten()
+
     Canvas(modifier) {
-        if (points.size < 2) return@Canvas
-        val minP = points.minOf { it.price }
-        val maxP = points.maxOf { it.price }
-        val t0 = points.first().ts
-        val dt = (points.last().ts - t0).coerceAtLeast(1L).toFloat()
+        if (validPoints.size < 2) return@Canvas
+
+        val minP = validPoints.minOf { it.price }
+        val maxP = validPoints.maxOf { it.price }
+        val t0 = validPoints.first().ts
+        val dt = (validPoints.last().ts - t0).coerceAtLeast(1L).toFloat()
         val pad = 6f * density
         val w = size.width - 2 * pad
         val h = size.height - 2 * pad
         fun px(ts: Long) = pad + (ts - t0).toFloat() / dt * w
         fun py(price: Double) =
-            if (maxP == minP) pad + h / 2 else pad + (1f - ((price - minP) / (maxP - minP)).toFloat()) * h
-        val line = Path()
-        points.forEachIndexed { i, p ->
-            if (i == 0) line.moveTo(px(p.ts), py(p.price)) else line.lineTo(px(p.ts), py(p.price))
-        }
-        val fill = Path().apply {
-            points.forEachIndexed { i, p ->
-                if (i == 0) moveTo(px(p.ts), py(p.price)) else lineTo(px(p.ts), py(p.price))
+            if (maxP == minP) pad + h / 2
+            else pad + (1f - ((price - minP) / (maxP - minP)).toFloat()) * h
+
+        val fillBrush = Brush.verticalGradient(
+            listOf(lineColor.copy(alpha = 0.22f), Color.Transparent)
+        )
+        val stroke = Stroke(
+            2f * density,
+            cap = StrokeCap.Round,
+            join = StrokeJoin.Round
+        )
+
+        segments.forEach { segment ->
+            if (segment.size >= 2) {
+                val line = Path()
+                segment.forEachIndexed { i, point ->
+                    if (i == 0) line.moveTo(px(point.ts), py(point.price))
+                    else line.lineTo(px(point.ts), py(point.price))
+                }
+
+                val fill = Path().apply {
+                    segment.forEachIndexed { i, point ->
+                        if (i == 0) moveTo(px(point.ts), py(point.price))
+                        else lineTo(px(point.ts), py(point.price))
+                    }
+                    lineTo(px(segment.last().ts), size.height - pad)
+                    lineTo(px(segment.first().ts), size.height - pad)
+                    close()
+                }
+
+                drawPath(fill, fillBrush)
+                drawPath(line, lineColor, style = stroke)
             }
-            lineTo(px(points.last().ts), size.height - pad)
-            lineTo(px(points.first().ts), size.height - pad)
-            close()
         }
-        drawPath(fill, Brush.verticalGradient(listOf(lineColor.copy(alpha = 0.22f), Color.Transparent)))
-        drawPath(line, lineColor, style = Stroke(2f * density, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        val last = points.last()
-        drawCircle(lineColor, radius = 3.5f * density, center = Offset(px(last.ts), py(last.price)))
+
+        val last = validPoints.last()
+        drawCircle(
+            lineColor,
+            radius = 3.5f * density,
+            center = Offset(px(last.ts), py(last.price))
+        )
     }
 }
-
 @Composable
 fun StatusPill(label: String, color: Color) {
     Row(
