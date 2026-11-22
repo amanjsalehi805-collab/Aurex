@@ -224,3 +224,35 @@ def test_complete_without_key_raises_not_configured():
         assert e.code == "ai_not_configured" and e.status == 503
     else:
         raise AssertionError("expected AiError")
+
+
+def test_facts_include_independent_historical_ranges():
+    q = [{
+        "asset_id": "usd_free_irt",
+        "price": 110.0,
+        "unit": "IRT",
+        "market": "free",
+        "source": "T",
+        "freshness": "fresh",
+        "change_pct": None,
+        "flags": [],
+    }]
+    ranges = {
+        "usd_free_irt": {
+            "24h": summarize([(100, 100.0)]),
+            "7d": summarize([(100, 100.0), (3700, 110.0)]),
+            "30d": summarize([(100, 100.0), (86400 * 20, 120.0)]),
+            "90d": summarize([]),
+        }
+    }
+    facts = ai.build_facts(q, {"usd_free_irt": ranges["usd_free_irt"]["7d"]}, [], ranges)
+    history = facts["quotes"][0]["history_ranges"]
+
+    assert history["24h"]["sufficient"] is False
+    assert history["24h"]["change_pct"] is None
+    assert history["7d"]["sufficient"] is True
+    assert history["7d"]["change_pct"] == 10.0
+    assert history["30d"]["sufficient"] is True
+    assert history["30d"]["min"] == 100.0
+    assert history["90d"]["sufficient"] is False
+    assert history["90d"]["max"] is None

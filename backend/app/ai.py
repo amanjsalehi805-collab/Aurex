@@ -101,8 +101,11 @@ def build_facts(
     quotes: list[dict],
     stats: dict[str, dict],
     unavailable: list[str],
+    range_stats: dict[str, dict] | None = None,
 ) -> dict:
     facts = []
+    range_stats = range_stats or {}
+    range_names = ("24h", "7d", "30d", "90d")
 
     for quote in quotes:
         if not isinstance(quote, dict):
@@ -122,6 +125,30 @@ def build_facts(
 
         stat = stats.get(asset_id) or {}
         sufficient = stat.get("sufficient") is True
+        asset_ranges = {}
+
+        for name in range_names:
+            item = (range_stats.get(asset_id) or {}).get(name) or {}
+            enough = item.get("sufficient") is True
+            span_s = item.get("span_s")
+            span_hours = (
+                round(span_s / 3600, 1)
+                if enough
+                and isinstance(span_s, (int, float))
+                and not isinstance(span_s, bool)
+                and math.isfinite(span_s)
+                else None
+            )
+            asset_ranges[name] = {
+                "points": item.get("points", 0),
+                "sufficient": enough,
+                "span_hours": span_hours,
+                "first": item.get("first") if enough else None,
+                "last": item.get("last") if enough else None,
+                "change_pct": item.get("change_pct") if enough else None,
+                "min": item.get("min") if enough else None,
+                "max": item.get("max") if enough else None,
+            }
 
         facts.append({
             "asset_id": asset_id,
@@ -142,6 +169,7 @@ def build_facts(
                 and math.isfinite(stat["span_s"])
                 else None
             ),
+            "history_ranges": asset_ranges,
             "flags": quote.get("flags") or [],
         })
 
@@ -166,6 +194,7 @@ Follow these rules:
 - Never give definite buy/sell instructions or promise profit.
 - Be concise.
 - If history is insufficient, say that a trend cannot be assessed.
+- Historical ranges are labelled 24h, 7d, 30d, and 90d. Use only ranges marked sufficient; never infer missing ranges from other periods.
 """
 
 

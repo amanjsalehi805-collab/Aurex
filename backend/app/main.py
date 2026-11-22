@@ -414,21 +414,34 @@ async def _facts():
         for quote in response.quotes
     ]
 
+    periods = {
+        "24h": 24 * 3600,
+        "7d": 7 * 86400,
+        "30d": 30 * 86400,
+        "90d": 90 * 86400,
+    }
     stats = {}
+    range_stats = {}
 
     for quote in quotes_data:
         asset_id = quote["asset_id"]
-        points = await asyncio.to_thread(
-            app.state.history.series,
-            asset_id,
-            now - 7 * 86400,
-        )
-        stats[asset_id] = summarize(points)
+        range_stats[asset_id] = {}
+
+        for name, seconds in periods.items():
+            points = await asyncio.to_thread(
+                app.state.history.series,
+                asset_id,
+                now - seconds,
+            )
+            range_stats[asset_id][name] = summarize(points)
+
+        stats[asset_id] = range_stats[asset_id]["7d"]
 
     facts = ai_mod.build_facts(
         quotes_data,
         stats,
         response.unavailable,
+        range_stats,
     )
 
     return response, facts, stats, now
@@ -490,8 +503,9 @@ async def ai_analysis(body: AnalysisIn, request: Request):
     response, facts, stats, now = await _facts()
 
     history_ok = any(
-        item.get("sufficient")
-        for item in stats.values()
+        period.get("sufficient") is True
+        for quote in facts["quotes"]
+        for period in quote.get("history_ranges", {}).values()
     )
 
     base = {
