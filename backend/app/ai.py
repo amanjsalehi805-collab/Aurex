@@ -192,19 +192,23 @@ Follow these rules:
 - Clearly distinguish facts, interpretation, and speculation. Label speculation as unverified.
 - Mention freshness when data is delayed or stale.
 - Never give definite buy/sell instructions or promise profit.
-- Be concise.
+- Be concise and explain financial terms when needed.
+- Historical ranges are independent: 24h, 7d, 30d, and 90d. Use only ranges explicitly marked sufficient.
+- Never infer a missing or insufficient range from another range. Explicitly identify unavailable ranges when relevant.
+- Compare changes across ranges only when both ranges are sufficient. Distinguish short-term observations from longer-term observations.
+- Describe historical change as the difference between the first and last recorded samples, not as a guaranteed or continuous trend.
+- Do not claim a strong trend from a small number of recorded points. Mention limitations in the available history.
+- Use historical minimum and maximum only when that range is sufficient. Do not invent intermediate values or dates.
+- Possible influencing factors are general context only. Never present them as verified causes unless DATA explicitly supports them.
 - If history is insufficient, say that a trend cannot be assessed.
-- Historical ranges are labelled 24h, 7d, 30d, and 90d. Use only ranges marked sufficient; never infer missing ranges from other periods.
 """
-
 
 ANALYSIS_TASK = """Analyze the supplied DATA only, in {lang}.
 Use exactly these three labelled sections:
-1) Summary of the current picture (facts from DATA)
-2) What the available changes suggest (interpretation; state if history is insufficient)
+1) Summary of the current picture (current prices, units, market type, source and freshness where available)
+2) What the available changes suggest (compare sufficient historical ranges when possible; distinguish short-term and longer-term observations; state which ranges are insufficient; avoid claiming certainty from sparse samples)
 3) Possible influencing factors (unverified general context, not facts from DATA)
 Keep the response under about 220 words. Do not give buy/sell advice."""
-
 
 def system_prompt(lang: str, facts: dict, generated_at: int) -> str:
     data = json.dumps(facts, ensure_ascii=False, allow_nan=False)

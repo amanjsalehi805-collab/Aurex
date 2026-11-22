@@ -256,3 +256,14 @@ def test_facts_include_independent_historical_ranges():
     assert history["30d"]["min"] == 100.0
     assert history["90d"]["sufficient"] is False
     assert history["90d"]["max"] is None
+
+
+def test_prompt_enforces_careful_multi_range_analysis():
+    prompt = ai.system_prompt("en", {"quotes": []}, 1)
+
+    assert "Historical ranges are independent" in prompt
+    assert "Compare changes across ranges only when both ranges are sufficient" in prompt
+    assert "first and last recorded samples" in prompt
+    assert "small number of recorded points" in prompt
+    assert "under about 220 words" in ai.ANALYSIS_TASK
+    assert "insufficient" in ai.ANALYSIS_TASK
