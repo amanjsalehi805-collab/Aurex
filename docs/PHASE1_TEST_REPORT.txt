@@ -1,0 +1,236 @@
+NEXUS AI Phase 1 - verification report
+======================================
+python: Python 3.12.3  sqlite: 3.45.1  git version 2.43.0
+date: 2026-11-22T21:18:39Z
+
+## Full test suite (verbose)
+test_chain_links_and_verifies (tests.test_audit.TestAudit.test_chain_links_and_verifies) ... ok
+test_chains_are_per_owner (tests.test_audit.TestAudit.test_chains_are_per_owner) ... ok
+test_database_refuses_edits_without_tampering_tools (tests.test_audit.TestAudit.test_database_refuses_edits_without_tampering_tools) ... ok
+test_deleting_a_middle_entry_is_detected (tests.test_audit.TestAudit.test_deleting_a_middle_entry_is_detected) ... ok
+test_edit_of_a_middle_entry_is_detected (tests.test_audit.TestAudit.test_edit_of_a_middle_entry_is_detected) ... ok
+test_empty_chain_verifies (tests.test_audit.TestAudit.test_empty_chain_verifies) ... ok
+test_forged_entry_with_repaired_next_link_is_still_detected (tests.test_audit.TestAudit.test_forged_entry_with_repaired_next_link_is_still_detected) ... ok
+test_rewriting_hash_to_hide_edit_breaks_the_next_link (tests.test_audit.TestAudit.test_rewriting_hash_to_hide_edit_breaks_the_next_link) ... ok
+test_secrets_never_reach_the_log (tests.test_audit.TestAudit.test_secrets_never_reach_the_log) ... ok
+test_unknown_actor_rejected (tests.test_audit.TestAudit.test_unknown_actor_rejected) ... ok
+test_checkpoint_leaves_head_branch_index_and_worktree_untouched (tests.test_git_checkpoint.TestCheckpoint.test_checkpoint_leaves_head_branch_index_and_worktree_untouched) ... ok
+test_ignored_files_not_captured (tests.test_git_checkpoint.TestCheckpoint.test_ignored_files_not_captured) ... ok
+test_label_is_sanitised (tests.test_git_checkpoint.TestCheckpoint.test_label_is_sanitised) ... ok
+test_not_a_repository_or_subdirectory (tests.test_git_checkpoint.TestCheckpoint.test_not_a_repository_or_subdirectory) ... ok
+test_repo_without_commits (tests.test_git_checkpoint.TestCheckpoint.test_repo_without_commits) ... ok
+test_drop_checkpoint (tests.test_git_checkpoint.TestRollback.test_drop_checkpoint) ... ok
+test_files_with_awkward_names (tests.test_git_checkpoint.TestRollback.test_files_with_awkward_names) ... ok
+test_full_rollback_restores_exact_state (tests.test_git_checkpoint.TestRollback.test_full_rollback_restores_exact_state) ... ok
+test_ignored_files_survive_rollback (tests.test_git_checkpoint.TestRollback.test_ignored_files_survive_rollback) ... ok
+test_rollback_does_not_move_head_or_branch_or_user_commits (tests.test_git_checkpoint.TestRollback.test_rollback_does_not_move_head_or_branch_or_user_commits) ... ok
+test_rollback_never_follows_symlinks_out_of_workspace (tests.test_git_checkpoint.TestRollback.test_rollback_never_follows_symlinks_out_of_workspace) ... ok
+test_rollback_requires_explicit_confirmation (tests.test_git_checkpoint.TestRollback.test_rollback_requires_explicit_confirmation) ... ok
+test_tampered_checkpoint_rejected (tests.test_git_checkpoint.TestRollback.test_tampered_checkpoint_rejected) ... ok
+test_outcome_rules_identical_in_python_protocol_and_sql (tests.test_integration.TestLayersAgree.test_outcome_rules_identical_in_python_protocol_and_sql) ... ok
+test_secret_in_command_output_is_redacted_before_it_could_be_stored_or_sent (tests.test_integration.TestLayersAgree.test_secret_in_command_output_is_redacted_before_it_could_be_stored_or_sent) ... ok
+test_validated_envelope_persists_and_payload_hash_survives (tests.test_integration.TestLayersAgree.test_validated_envelope_persists_and_payload_hash_survives) ... ok
+test_cannot_finish_twice_or_unknown_key (tests.test_journal.TestJournal.test_cannot_finish_twice_or_unknown_key) ... ok
+test_crash_mid_run_becomes_unknown_and_is_never_auto_rerun (tests.test_journal.TestJournal.test_crash_mid_run_becomes_unknown_and_is_never_auto_rerun) ... ok
+test_duplicate_while_running_is_not_executed_twice (tests.test_journal.TestJournal.test_duplicate_while_running_is_not_executed_twice) ... ok
+test_first_begin_executes_and_finish_is_recorded (tests.test_journal.TestJournal.test_first_begin_executes_and_finish_is_recorded) ... ok
+test_invalid_outcomes_rejected (tests.test_journal.TestJournal.test_invalid_outcomes_rejected) ... ok
+test_key_reuse_for_different_command_is_a_conflict (tests.test_journal.TestJournal.test_key_reuse_for_different_command_is_a_conflict) ... ok
+test_lost_response_is_resendable_not_rerunnable (tests.test_journal.TestJournal.test_lost_response_is_resendable_not_rerunnable) ... ok
+test_replay_after_finish_returns_stored_result_without_executing (tests.test_journal.TestJournal.test_replay_after_finish_returns_stored_result_without_executing) ... ok
+test_state_is_durable_across_reopen (tests.test_journal.TestJournal.test_state_is_durable_across_reopen) ... ok
+test_unknown_records_are_reported_to_cloud_too (tests.test_journal.TestJournal.test_unknown_records_are_reported_to_cloud_too) ... ok
+test_ceilings_and_types (tests.test_limits.TestLimits.test_ceilings_and_types) ... ok
+test_defaults_are_safe (tests.test_limits.TestLimits.test_defaults_are_safe) ... ok
+test_dict_round_trip_and_unknown_fields (tests.test_limits.TestLimits.test_dict_round_trip_and_unknown_fields) ... ok
+test_docker_args_contain_every_isolation_flag (tests.test_limits.TestLimits.test_docker_args_contain_every_isolation_flag) ... ok
+test_injection_attempts_rejected (tests.test_limits.TestLimits.test_injection_attempts_rejected) ... ok
+test_network_policy_rules (tests.test_limits.TestLimits.test_network_policy_rules) ... ok
+test_read_only_workspace_and_subdir_cwd (tests.test_limits.TestLimits.test_read_only_workspace_and_subdir_cwd) ... ok
+test_scoped_network_is_refused_until_proxy_exists (tests.test_limits.TestLimits.test_scoped_network_is_refused_until_proxy_exists) ... ok
+test_bad_ids_timestamps_endpoints_versions (tests.test_messages.TestEnvelope.test_bad_ids_timestamps_endpoints_versions) ... ok
+test_every_type_has_valid_example_spec_and_source_rule (tests.test_messages.TestEnvelope.test_every_type_has_valid_example_spec_and_source_rule) ... ok
+test_payload_hash_is_deterministic_and_key_order_independent (tests.test_messages.TestEnvelope.test_payload_hash_is_deterministic_and_key_order_independent) ... ok
+test_strict_json (tests.test_messages.TestEnvelope.test_strict_json) ... ok
+test_unknown_top_level_and_payload_fields_rejected (tests.test_messages.TestEnvelope.test_unknown_top_level_and_payload_fields_rejected) ... ok
+test_valid_envelopes_round_trip (tests.test_messages.TestEnvelope.test_valid_envelopes_round_trip) ... ok
+test_wrong_types_and_bool_is_not_int (tests.test_messages.TestEnvelope.test_wrong_types_and_bool_is_not_int) ... ok
+test_operation_field_rules (tests.test_messages.TestFilePatch.test_operation_field_rules) ... ok
+test_patch_path_traversal (tests.test_messages.TestFilePatch.test_patch_path_traversal) ... ok
+test_ai_can_only_propose_never_report_or_approve (tests.test_messages.TestProvenanceAndRouting.test_ai_can_only_propose_never_report_or_approve) ... ok
+test_ai_output_cannot_reach_an_executor_directly (tests.test_messages.TestProvenanceAndRouting.test_ai_output_cannot_reach_an_executor_directly) ... ok
+test_only_a_user_can_approve (tests.test_messages.TestProvenanceAndRouting.test_only_a_user_can_approve) ... ok
+test_orchestrator_dispatch_must_target_executor (tests.test_messages.TestProvenanceAndRouting.test_orchestrator_dispatch_must_target_executor) ... ok
+test_results_must_go_to_orchestrator_and_be_correlated (tests.test_messages.TestProvenanceAndRouting.test_results_must_go_to_orchestrator_and_be_correlated) ... ok
+test_failed_requires_nonzero (tests.test_messages.TestResultConsistency.test_failed_requires_nonzero) ... ok
+test_finish_not_before_start (tests.test_messages.TestResultConsistency.test_finish_not_before_start) ... ok
+test_other_statuses (tests.test_messages.TestResultConsistency.test_other_statuses) ... ok
+test_output_truncation_must_be_declared (tests.test_messages.TestResultConsistency.test_output_truncation_must_be_declared) ... ok
+test_success_requires_exit_zero (tests.test_messages.TestResultConsistency.test_success_requires_exit_zero) ... ok
+test_test_result_cannot_claim_pass_with_failures (tests.test_messages.TestResultConsistency.test_test_result_cannot_claim_pass_with_failures) ... ok
+test_ai_request_must_attest_redaction (tests.test_messages.TestSeparation.test_ai_request_must_attest_redaction) ... ok
+test_code_block_cannot_carry_a_command_or_be_a_shell_payload (tests.test_messages.TestSeparation.test_code_block_cannot_carry_a_command_or_be_a_shell_payload) ... ok
+test_code_block_destination_rules (tests.test_messages.TestSeparation.test_code_block_destination_rules) ... ok
+test_cwd_traversal_rejected (tests.test_messages.TestSeparation.test_cwd_traversal_rejected) ... ok
+test_every_command_has_a_bounded_timeout (tests.test_messages.TestSeparation.test_every_command_has_a_bounded_timeout) ... ok
+test_explicit_target_required_and_validated (tests.test_messages.TestSeparation.test_explicit_target_required_and_validated) ... ok
+test_scoped_network_requires_approval_and_none_forbids_it (tests.test_messages.TestSeparation.test_scoped_network_requires_approval_and_none_forbids_it) ... ok
+test_terminal_output_cannot_be_a_file_write (tests.test_messages.TestSeparation.test_terminal_output_cannot_be_a_file_write) ... ok
+test_all_failures_look_identical (tests.test_pairing.TestPairing.test_all_failures_look_identical) ... ok
+test_expired_token_rejected_but_valid_just_before_expiry (tests.test_pairing.TestPairing.test_expired_token_rejected_but_valid_just_before_expiry) ... ok
+test_issue_redeem_creates_active_device_for_token_owner (tests.test_pairing.TestPairing.test_issue_redeem_creates_active_device_for_token_owner) ... ok
+test_pairing_and_revocation_are_audited (tests.test_pairing.TestPairing.test_pairing_and_revocation_are_audited) ... ok
+test_plaintext_token_is_never_stored (tests.test_pairing.TestPairing.test_plaintext_token_is_never_stored) ... ok
+test_revocation_is_immediate_and_owner_scoped (tests.test_pairing.TestPairing.test_revocation_is_immediate_and_owner_scoped) ... ok
+test_revoked_token_rejected (tests.test_pairing.TestPairing.test_revoked_token_rejected) ... ok
+test_same_public_key_cannot_pair_twice (tests.test_pairing.TestPairing.test_same_public_key_cannot_pair_twice) ... ok
+test_token_is_single_use (tests.test_pairing.TestPairing.test_token_is_single_use) ... ok
+test_ttl_bounds (tests.test_pairing.TestPairing.test_ttl_bounds) ... ok
+test_accepts_normal_paths_and_normalises (tests.test_paths.TestLexical.test_accepts_normal_paths_and_normalises) ... ok
+test_non_string (tests.test_paths.TestLexical.test_non_string) ... ok
+test_rejects_attacks (tests.test_paths.TestLexical.test_rejects_attacks) ... ok
+test_bad_roots (tests.test_paths.TestResolve.test_bad_roots) ... ok
+test_dot_git_symlink_alias_is_blocked_by_its_lexical_name (tests.test_paths.TestResolve.test_dot_git_symlink_alias_is_blocked_by_its_lexical_name) ... ok
+test_existing_and_new_files_resolve_inside (tests.test_paths.TestResolve.test_existing_and_new_files_resolve_inside) ... ok
+test_protected_git_paths_not_writable (tests.test_paths.TestResolve.test_protected_git_paths_not_writable) ... ok
+test_relative_workspace_root_rejected_even_when_directory_exists (tests.test_paths.TestResolve.test_relative_workspace_root_rejected_even_when_directory_exists) ... ok
+test_sibling_prefix_directory_is_not_inside (tests.test_paths.TestResolve.test_sibling_prefix_directory_is_not_inside) ... ok
+test_symlink_escapes_are_blocked (tests.test_paths.TestResolve.test_symlink_escapes_are_blocked) ... ok
+test_symlink_into_git_dir_not_writable (tests.test_paths.TestResolve.test_symlink_into_git_dir_not_writable) ... ok
+test_symlink_staying_inside_is_allowed (tests.test_paths.TestResolve.test_symlink_staying_inside_is_allowed) ... ok
+test_workspaces_must_be_disjoint (tests.test_paths.TestResolve.test_workspaces_must_be_disjoint) ... ok
+test_assignments (tests.test_redaction.TestRedaction.test_assignments) ... ok
+test_bearer_keeps_scheme_word_and_masks_only_the_token (tests.test_redaction.TestRedaction.test_bearer_keeps_scheme_word_and_masks_only_the_token) ... ok
+test_each_secret_kind_is_redacted (tests.test_redaction.TestRedaction.test_each_secret_kind_is_redacted) ... ok
+test_idempotent_and_findings_hold_no_secret_text (tests.test_redaction.TestRedaction.test_idempotent_and_findings_hold_no_secret_text) ... ok
+test_known_secrets_exact_match_even_without_pattern (tests.test_redaction.TestRedaction.test_known_secrets_exact_match_even_without_pattern) ... ok
+test_no_false_positives_on_ordinary_code (tests.test_redaction.TestRedaction.test_no_false_positives_on_ordinary_code) ... ok
+test_overlap_resolution_prefers_specific_kind (tests.test_redaction.TestRedaction.test_overlap_resolution_prefers_specific_kind) ... ok
+test_overlapping_matches_collapse_to_one_marker_with_exact_output (tests.test_redaction.TestRedaction.test_overlapping_matches_collapse_to_one_marker_with_exact_output) ... ok
+test_private_key_block_and_truncated_block (tests.test_redaction.TestRedaction.test_private_key_block_and_truncated_block) ... ok
+test_redact_obj (tests.test_redaction.TestRedaction.test_redact_obj) ... ok
+test_sensitive_paths (tests.test_redaction.TestRedaction.test_sensitive_paths) ... ok
+test_url_credentials_and_bearer (tests.test_redaction.TestRedaction.test_url_credentials_and_bearer) ... ok
+test_execution_cannot_attach_to_job_of_other_project (tests.test_schema.TestExecutionInvariants.test_execution_cannot_attach_to_job_of_other_project) ... ok
+test_failed_needs_nonzero (tests.test_schema.TestExecutionInvariants.test_failed_needs_nonzero) ... ok
+test_success_needs_exit_zero (tests.test_schema.TestExecutionInvariants.test_success_needs_exit_zero) ... ok
+test_timed_out_needs_start_and_finished_states_need_both_times (tests.test_schema.TestExecutionInvariants.test_timed_out_needs_start_and_finished_states_need_both_times) ... ok
+test_unknown_and_not_executed_cannot_claim_exit_codes (tests.test_schema.TestExecutionInvariants.test_unknown_and_not_executed_cannot_claim_exit_codes) ... ok
+test_unknown_status_rejected (tests.test_schema.TestExecutionInvariants.test_unknown_status_rejected) ... ok
+test_every_task_state_is_storable_and_bogus_is_not (tests.test_schema.TestIsolation.test_every_task_state_is_storable_and_bogus_is_not) ... ok
+test_iteration_limit_is_a_database_invariant (tests.test_schema.TestIsolation.test_iteration_limit_is_a_database_invariant) ... ok
+test_memory_scopes_do_not_mix (tests.test_schema.TestIsolation.test_memory_scopes_do_not_mix) ... ok
+test_message_cannot_cross_projects_or_owners_or_tasks (tests.test_schema.TestIsolation.test_message_cannot_cross_projects_or_owners_or_tasks) ... ok
+test_message_type_and_status_constrained (tests.test_schema.TestIsolation.test_message_type_and_status_constrained) ... ok
+test_project_unique_names_and_workspaces (tests.test_schema.TestIsolation.test_project_unique_names_and_workspaces) ... ok
+test_resume_state_only_with_suspended_states (tests.test_schema.TestIsolation.test_resume_state_only_with_suspended_states) ... ok
+test_task_cannot_attach_to_another_owners_project (tests.test_schema.TestIsolation.test_task_cannot_attach_to_another_owners_project) ... ok
+test_attempts_bounded (tests.test_schema.TestJobs.test_attempts_bounded) ... ok
+test_idempotency_key_unique_per_owner (tests.test_schema.TestJobs.test_idempotency_key_unique_per_owner) ... ok
+test_job_device_must_belong_to_same_owner (tests.test_schema.TestJobs.test_job_device_must_belong_to_same_owner) ... ok
+test_target_never_silently_switches (tests.test_schema.TestJobs.test_target_never_silently_switches) ... ok
+test_drift_message_types_exec_status_and_risk_categories (tests.test_schema.TestMigrations.test_drift_message_types_exec_status_and_risk_categories) ... ok
+test_drift_task_states_match_enum (tests.test_schema.TestMigrations.test_drift_task_states_match_enum) ... ok
+test_foreign_keys_are_enforced (tests.test_schema.TestMigrations.test_foreign_keys_are_enforced) ... ok
+test_fresh_apply_and_idempotent_rerun (tests.test_schema.TestMigrations.test_fresh_apply_and_idempotent_rerun) ... ok
+test_modified_migration_detected (tests.test_schema.TestMigrations.test_modified_migration_detected) ... ok
+test_unknown_applied_migration_detected (tests.test_schema.TestMigrations.test_unknown_applied_migration_detected) ... ok
+test_approval_constraints (tests.test_schema.TestMisc.test_approval_constraints) ... ok
+test_device_and_pairing_token_constraints (tests.test_schema.TestMisc.test_device_and_pairing_token_constraints) ... ok
+test_provider_secret_must_be_a_reference_never_a_raw_key (tests.test_schema.TestMisc.test_provider_secret_must_be_a_reference_never_a_raw_key) ... ok
+test_append_only_tables (tests.test_schema.TestTamperResistance.test_append_only_tables) ... ok
+test_file_change_and_output_rows_are_append_only_and_consistent (tests.test_schema.TestTamperResistance.test_file_change_and_output_rows_are_append_only_and_consistent) ... ok
+test_messages_immutable_except_status (tests.test_schema.TestTamperResistance.test_messages_immutable_except_status) ... ok
+test_cannot_skip_steps (tests.test_states.TestStates.test_cannot_skip_steps) ... ok
+test_every_active_state_can_pause_wait_cancel_fail (tests.test_states.TestStates.test_every_active_state_can_pause_wait_cancel_fail) ... ok
+test_no_self_transitions (tests.test_states.TestStates.test_no_self_transitions) ... ok
+test_partition (tests.test_states.TestStates.test_partition) ... ok
+test_retry_loops_exist_but_are_bounded_by_db_iteration_check (tests.test_states.TestStates.test_retry_loops_exist_but_are_bounded_by_db_iteration_check) ... ok
+test_spec_cycle_is_walkable (tests.test_states.TestStates.test_spec_cycle_is_walkable) ... ok
+test_suspended_resumes_only_to_saved_state (tests.test_states.TestStates.test_suspended_resumes_only_to_saved_state) ... ok
+test_terminal_states_have_no_exits (tests.test_states.TestStates.test_terminal_states_have_no_exits) ... ok
+
+----------------------------------------------------------------------
+Ran 145 tests in 1.452s
+
+OK
+
+## Mutation gate (tools/mutation_check.py)
+CAUGHT    [paths] '..' segments allowed
+CAUGHT    [paths] absolute '/' paths allowed
+CAUGHT    [paths] home '~' / drive-letter paths allowed
+CAUGHT    [paths] backslashes allowed
+CAUGHT    [paths] control chars / NUL allowed
+CAUGHT    [paths] over-long paths allowed
+CAUGHT    [paths] symlinks not resolved
+CAUGHT    [paths] containment check disabled
+CAUGHT    [paths] containment uses string-prefix (sibling-dir bug)
+CAUGHT    [paths] .git protection ignores resolved (symlink) path
+CAUGHT    [paths] .git protection ignores lexical path
+CAUGHT    [paths] .git protection case-sensitive
+CAUGHT    [paths] .git protection disabled for_write
+CAUGHT    [paths] overlap check one-directional
+CAUGHT    [paths] overlap check disabled
+CAUGHT    [paths] filesystem root allowed as workspace
+CAUGHT    [paths] relative workspace root allowed
+CAUGHT    [paths] missing workspace dir allowed
+CAUGHT    [redaction] AWS key pattern disabled
+CAUGHT    [redaction] Anthropic key pattern disabled
+CAUGHT    [redaction] OpenAI key pattern disabled
+CAUGHT    [redaction] Slack token pattern disabled
+CAUGHT    [redaction] JWT pattern disabled
+CAUGHT    [redaction] PEM truncated-block handling removed
+CAUGHT    [redaction] URL-credential pattern disabled
+CAUGHT    [redaction] bearer redacts whole match instead of token
+CAUGHT    [redaction] assignment pattern ignores 'password'
+CAUGHT    [redaction] assignment min value length raised to 40
+CAUGHT    [redaction] known secrets ignored
+CAUGHT    [redaction] known-secret min length lowered to 1
+CAUGHT    [redaction] overlapping findings not resolved
+CAUGHT    [redaction] redact() returns text unchanged
+CAUGHT    [redaction] redact_obj ignores secret-looking keys
+CAUGHT    [redaction] redact_obj skips nested lists
+CAUGHT    [redaction] sensitive-file allow-list removed (.env.example flagged)
+CAUGHT    [redaction] sensitive dirs (.ssh/.aws) ignored
+CAUGHT    [redaction] '.env.*' pattern removed
+CAUGHT    [limits] docker: --network none -> bridge
+CAUGHT    [limits] docker: --cap-drop ALL removed
+CAUGHT    [limits] docker: --read-only removed
+CAUGHT    [limits] docker: --security-opt no-new-privileges removed
+CAUGHT    [limits] docker: runs as root
+CAUGHT    [limits] docker: --pids-limit removed
+CAUGHT    [limits] docker: --memory-swap removed
+CAUGHT    [limits] docker: --cpus removed
+CAUGHT    [limits] docker: readonly mount flag dropped
+CAUGHT    [limits] docker: mount-option injection (comma) allowed
+CAUGHT    [limits] docker: option-injection via image name allowed
+CAUGHT    [limits] docker: cwd traversal allowed
+CAUGHT    [limits] docker: scoped network silently accepted
+CAUGHT    [limits] timeout ceiling removed
+CAUGHT    [limits] memory ceiling removed
+CAUGHT    [limits] bool accepted as number
+CAUGHT    [limits] filesystem mode unchecked
+CAUGHT    [limits] network policy not validated by limits
+CAUGHT    [limits] scoped network without approval id allowed
+CAUGHT    [limits] scoped network without hosts allowed
+SURVIVED  [limits] wildcard host allowed (explicit check only)
+CAUGHT    [limits] host name syntax unchecked
+CAUGHT    [limits] mode 'none' may carry hosts/approval
+CAUGHT    [limits] unknown limit fields accepted by from_dict
+CAUGHT    [other] success no longer requires exit 0
+CAUGHT    [other] AI allowed to approve
+CAUGHT    [other] AI may dispatch straight to executors
+CAUGHT    [other] unknown journal state re-executes
+CAUGHT    [other] rollback ignores confirm
+CAUGHT    [other] SQL: failed may have exit 0
+CAUGHT    [other] audit hash ignores previous hash
+CAUGHT    [other] composite FK on messages dropped
+CAUGHT    [other] unknown payload fields ignored
+CAUGHT    [other] pairing: both single-use layers removed
+CAUGHT    [other] shell timeout ceiling not enforced in protocol
+
+paths {'CAUGHT': 18}
+redaction {'CAUGHT': 19}
+limits {'CAUGHT': 23, 'SURVIVED': 1}
+other {'CAUGHT': 11}
+NOT CAUGHT: [('limits', 'wildcard host allowed (explicit check only)', 'SURVIVED')]

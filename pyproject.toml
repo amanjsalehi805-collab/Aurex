@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexus-core"
+version = "0.1.0"
+description = "NEXUS AI - Phase 1 foundation: protocol, schema, safety primitives"
+requires-python = ">=3.11"
+dependencies = []          # Phase 1 core is deliberately standard-library only
+
+[project.optional-dependencies]
+dev = ["ruff", "mypy"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nexus_core = ["migrations/*.sql"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+check_untyped_defs = true
