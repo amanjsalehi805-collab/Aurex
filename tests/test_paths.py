@@ -3,8 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nexus_core.paths import (PathSecurityError, assert_workspaces_disjoint, resolve_in_workspace,
-                              validate_relative_path, validate_workspace_root)
+from nexus_core.paths import (
+    PathSecurityError,
+    assert_workspaces_disjoint,
+    resolve_in_workspace,
+    validate_relative_path,
+    validate_workspace_root,
+)
 
 
 class TestLexical(unittest.TestCase):
@@ -14,8 +19,26 @@ class TestLexical(unittest.TestCase):
         self.assertEqual(validate_relative_path(".", allow_root=True), ".")
 
     def test_rejects_attacks(self):
-        bad = ["", "..", "../x", "a/../../x", "a/..", "/etc/passwd", "~", "~root/x", "C:\\Windows",
-               "c:/x", "a\\..\\b", "a\x00b", "a\nb", "a\x7fb", "x" * 5000, ".", "./", "//"]
+        bad = [
+            "",
+            "..",
+            "../x",
+            "a/../../x",
+            "a/..",
+            "/etc/passwd",
+            "~",
+            "~root/x",
+            "C:\\Windows",
+            "c:/x",
+            "a\\..\\b",
+            "a\x00b",
+            "a\nb",
+            "a\x7fb",
+            "x" * 5000,
+            ".",
+            "./",
+            "//",
+        ]
         for p in bad:
             with self.subTest(p=p), self.assertRaises(PathSecurityError):
                 validate_relative_path(p)
@@ -32,7 +55,8 @@ class TestResolve(unittest.TestCase):
         base = Path(os.path.realpath(self._tmp.name))
         self.ws = base / "ws"
         self.outside = base / "outside"
-        self.ws.mkdir(); self.outside.mkdir()
+        self.ws.mkdir()
+        self.outside.mkdir()
         (self.outside / "secret.txt").write_text("s")
         (self.ws / "src").mkdir()
         (self.ws / "src" / "a.py").write_text("x")
@@ -46,8 +70,10 @@ class TestResolve(unittest.TestCase):
 
     def test_existing_and_new_files_resolve_inside(self):
         self.assertEqual(resolve_in_workspace(self.ws, "src/a.py"), self.ws / "src" / "a.py")
-        self.assertEqual(resolve_in_workspace(self.ws, "src/new/deep.py", for_write=True),
-                         self.ws / "src" / "new" / "deep.py")
+        self.assertEqual(
+            resolve_in_workspace(self.ws, "src/new/deep.py", for_write=True),
+            self.ws / "src" / "new" / "deep.py",
+        )
         self.assertEqual(resolve_in_workspace(self.ws, ".", allow_root=True), self.ws)
 
     def test_symlink_escapes_are_blocked(self):
@@ -67,7 +93,13 @@ class TestResolve(unittest.TestCase):
 
     def test_protected_git_paths_not_writable(self):
         (self.ws / ".git").mkdir()
-        for rel in (".git/config", ".git/hooks/pre-commit", ".GIT/config", "src/.git/hooks/x", ".Git"):
+        for rel in (
+            ".git/config",
+            ".git/hooks/pre-commit",
+            ".GIT/config",
+            "src/.git/hooks/x",
+            ".Git",
+        ):
             with self.subTest(rel=rel), self.assertRaises(PathSecurityError):
                 resolve_in_workspace(self.ws, rel, for_write=True)
         resolve_in_workspace(self.ws, ".git/config")  # reading is a separate policy decision

@@ -4,13 +4,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from nexus_core.git_checkpoint import (GitError, NotARepository, create_checkpoint, drop_checkpoint,
-                                       plan_rollback, rollback)
+from nexus_core.git_checkpoint import (
+    GitError,
+    NotARepository,
+    create_checkpoint,
+    drop_checkpoint,
+    plan_rollback,
+    rollback,
+)
 
 
 def git(cwd, *args):
     env = {**os.environ, "GIT_CONFIG_NOSYSTEM": "1"}
-    return subprocess.run(["git", *args], cwd=cwd, env=env, check=True, capture_output=True, text=True).stdout
+    return subprocess.run(
+        ["git", *args], cwd=cwd, env=env, check=True, capture_output=True, text=True
+    ).stdout
 
 
 def tree_state(root: Path) -> dict:
@@ -48,16 +56,28 @@ class TestCheckpoint(GitCase):
         git(self.ws, "add", "edit.txt")
         (self.ws / "edit.txt").write_text("edit staged then modified\n")
         (self.ws / "untracked.txt").write_text("u\n")
-        before = (git(self.ws, "rev-parse", "HEAD"), git(self.ws, "status", "--porcelain=v1"),
-                  git(self.ws, "diff", "--cached"), git(self.ws, "branch", "--show-current"), tree_state(self.ws))
+        before = (
+            git(self.ws, "rev-parse", "HEAD"),
+            git(self.ws, "status", "--porcelain=v1"),
+            git(self.ws, "diff", "--cached"),
+            git(self.ws, "branch", "--show-current"),
+            tree_state(self.ws),
+        )
         cp = create_checkpoint(self.ws, "before risky edit")
-        after = (git(self.ws, "rev-parse", "HEAD"), git(self.ws, "status", "--porcelain=v1"),
-                 git(self.ws, "diff", "--cached"), git(self.ws, "branch", "--show-current"), tree_state(self.ws))
+        after = (
+            git(self.ws, "rev-parse", "HEAD"),
+            git(self.ws, "status", "--porcelain=v1"),
+            git(self.ws, "diff", "--cached"),
+            git(self.ws, "branch", "--show-current"),
+            tree_state(self.ws),
+        )
         self.assertEqual(before, after)
         self.assertTrue(cp.ref.startswith("refs/nexus/checkpoints/"))
         self.assertEqual(git(self.ws, "rev-parse", cp.ref).strip(), cp.commit_sha)
         self.assertEqual(git(self.ws, "show", f"{cp.commit_sha}:untracked.txt"), "u\n")
-        self.assertEqual(git(self.ws, "show", f"{cp.commit_sha}:edit.txt"), "edit staged then modified\n")
+        self.assertEqual(
+            git(self.ws, "show", f"{cp.commit_sha}:edit.txt"), "edit staged then modified\n"
+        )
 
     def test_ignored_files_not_captured(self):
         (self.ws / "ignored.log").write_text("secret-ish\n")
@@ -147,9 +167,9 @@ class TestRollback(GitCase):
         outside.mkdir()
         (outside / "victim.txt").write_text("precious\n")
         cp = create_checkpoint(self.ws, "pre")
-        os.symlink(outside, self.ws / "escape")      # created after the checkpoint
+        os.symlink(outside, self.ws / "escape")  # created after the checkpoint
         rollback(self.ws, plan_rollback(self.ws, cp), confirm=True)
-        self.assertFalse(os.path.lexists(self.ws / "escape"))   # link itself removed
+        self.assertFalse(os.path.lexists(self.ws / "escape"))  # link itself removed
         self.assertEqual((outside / "victim.txt").read_text(), "precious\n")
 
     def test_files_with_awkward_names(self):

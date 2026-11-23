@@ -34,7 +34,9 @@ class TestPairing(unittest.TestCase):
         _, token = self.store.issue(self.owner)
         device = self.redeem(token)
         row = self.conn.execute("SELECT * FROM devices WHERE id = ?", (device,)).fetchone()
-        self.assertEqual((row["owner_id"], row["status"], row["public_key"]), (self.owner, "active", KEY1))
+        self.assertEqual(
+            (row["owner_id"], row["status"], row["public_key"]), (self.owner, "active", KEY1)
+        )
         self.assertTrue(self.store.is_device_active(device))
 
     def test_token_is_single_use(self):
@@ -56,28 +58,39 @@ class TestPairing(unittest.TestCase):
 
     def test_revoked_token_rejected(self):
         tid, token = self.store.issue(self.owner)
-        self.conn.execute("UPDATE pairing_tokens SET revoked_at = '2026-01-01T00:00:00.000000Z' WHERE id = ?", (tid,))
+        self.conn.execute(
+            "UPDATE pairing_tokens SET revoked_at = '2026-01-01T00:00:00.000000Z' WHERE id = ?",
+            (tid,),
+        )
         with self.assertRaises(PairingError):
             self.redeem(token)
 
     def test_all_failures_look_identical(self):
         _, token = self.store.issue(self.owner)
         messages = set()
-        for t, k in (("nxp_wrong", KEY1), (token, "not-base64!!"), (token, base64.b64encode(b"short").decode()),
-                     ("", KEY1)):
+        for t, k in (
+            ("nxp_wrong", KEY1),
+            (token, "not-base64!!"),
+            (token, base64.b64encode(b"short").decode()),
+            ("", KEY1),
+        ):
             with self.assertRaises(PairingError) as ctx:
                 self.redeem(t, key=k)
             messages.add(str(ctx.exception))
         self.assertEqual(messages, {GENERIC_FAILURE})
 
     def test_same_public_key_cannot_pair_twice(self):
-        _, t1 = self.store.issue(self.owner); _, t2 = self.store.issue(self.owner)
+        _, t1 = self.store.issue(self.owner)
+        _, t2 = self.store.issue(self.owner)
         self.redeem(t1)
         with self.assertRaises(PairingError):
             self.redeem(t2)
         # the failed redeem must not burn the second token
-        self.assertIsNone(self.conn.execute("SELECT used_at FROM pairing_tokens WHERE token_hash = ?",
-                                            (hash_token(t2),)).fetchone()["used_at"])
+        self.assertIsNone(
+            self.conn.execute(
+                "SELECT used_at FROM pairing_tokens WHERE token_hash = ?", (hash_token(t2),)
+            ).fetchone()["used_at"]
+        )
         self.redeem(t2, key=KEY2)
 
     def test_plaintext_token_is_never_stored(self):
@@ -99,14 +112,16 @@ class TestPairing(unittest.TestCase):
         self.assertTrue(self.store.is_device_active(device))
         self.assertTrue(self.store.revoke_device(device, self.owner))
         self.assertFalse(self.store.is_device_active(device))
-        self.assertFalse(self.store.revoke_device(device, self.owner))   # already revoked
+        self.assertFalse(self.store.revoke_device(device, self.owner))  # already revoked
         self.assertFalse(self.store.is_device_active("00000000-0000-4000-8000-000000000000"))
 
     def test_pairing_and_revocation_are_audited(self):
         _, token = self.store.issue(self.owner)
         device = self.redeem(token)
         self.store.revoke_device(device, self.owner)
-        actions = [r["action"] for r in self.conn.execute("SELECT action FROM audit_log ORDER BY seq")]
+        actions = [
+            r["action"] for r in self.conn.execute("SELECT action FROM audit_log ORDER BY seq")
+        ]
         self.assertEqual(actions, ["device.paired", "device.revoked"])
         self.assertIsNone(self.audit.verify(self.owner))
 

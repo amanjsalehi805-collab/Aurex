@@ -19,15 +19,19 @@ def fresh_db() -> sqlite3.Connection:
 
 def add_user(conn, email=None) -> str:
     uid = new_id()
-    conn.execute("INSERT INTO users (id, email, display_name, created_at) VALUES (?,?,?,?)",
-                 (uid, email or f"{uid}@example.invalid", "User", ts()))
+    conn.execute(
+        "INSERT INTO users (id, email, display_name, created_at) VALUES (?,?,?,?)",
+        (uid, email or f"{uid}@example.invalid", "User", ts()),
+    )
     return uid
 
 
 def add_project(conn, owner_id, name=None, **extra) -> str:
     pid = new_id()
-    conn.execute("INSERT INTO projects (id, owner_id, name, created_at, updated_at) VALUES (?,?,?,?,?)",
-                 (pid, owner_id, name or f"p-{pid[:8]}", ts(), ts()))
+    conn.execute(
+        "INSERT INTO projects (id, owner_id, name, created_at, updated_at) VALUES (?,?,?,?,?)",
+        (pid, owner_id, name or f"p-{pid[:8]}", ts(), ts()),
+    )
     return pid
 
 
@@ -35,14 +39,18 @@ def add_task(conn, owner_id, project_id, state="RECEIVE_TASK") -> str:
     tid = new_id()
     conn.execute(
         "INSERT INTO tasks (id, owner_id, project_id, title, state, created_at, updated_at, last_activity_at)"
-        " VALUES (?,?,?,?,?,?,?,?)", (tid, owner_id, project_id, "t", state, ts(), ts(), ts()))
+        " VALUES (?,?,?,?,?,?,?,?)",
+        (tid, owner_id, project_id, "t", state, ts(), ts(), ts()),
+    )
     return tid
 
 
 def add_session(conn, owner_id, project_id, task_id) -> str:
     sid = new_id()
-    conn.execute("INSERT INTO sessions (id, owner_id, project_id, task_id, created_at) VALUES (?,?,?,?,?)",
-                 (sid, owner_id, project_id, task_id, ts()))
+    conn.execute(
+        "INSERT INTO sessions (id, owner_id, project_id, task_id, created_at) VALUES (?,?,?,?,?)",
+        (sid, owner_id, project_id, task_id, ts()),
+    )
     return sid
 
 

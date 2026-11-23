@@ -1,12 +1,34 @@
 import unittest
 
-from nexus_core.states import (ACTIVE, SUSPENDED, TERMINAL, InvalidTransition, TaskState as S,
-                               allowed_transitions, check_transition)
+from nexus_core.states import (
+    ACTIVE,
+    SUSPENDED,
+    TERMINAL,
+    InvalidTransition,
+    TaskState as S,
+    allowed_transitions,
+    check_transition,
+)
 
-HAPPY = [S.RECEIVE_TASK, S.IDENTIFY_PROJECT, S.LOAD_CONTEXT, S.ANALYZE_REQUIREMENTS, S.CREATE_PLAN,
-         S.REQUEST_APPROVAL_IF_NEEDED, S.GENERATE_CHANGES, S.VALIDATE_CHANGES, S.APPLY_CHANGES,
-         S.EXECUTE_COMMANDS, S.COLLECT_OUTPUT, S.ANALYZE_RESULTS, S.RETURN_RESULTS_TO_AI,
-         S.CONTINUE_OR_RETRY, S.RUN_FINAL_TESTS, S.GENERATE_COMPLETION_REPORT, S.COMPLETED]
+HAPPY = [
+    S.RECEIVE_TASK,
+    S.IDENTIFY_PROJECT,
+    S.LOAD_CONTEXT,
+    S.ANALYZE_REQUIREMENTS,
+    S.CREATE_PLAN,
+    S.REQUEST_APPROVAL_IF_NEEDED,
+    S.GENERATE_CHANGES,
+    S.VALIDATE_CHANGES,
+    S.APPLY_CHANGES,
+    S.EXECUTE_COMMANDS,
+    S.COLLECT_OUTPUT,
+    S.ANALYZE_RESULTS,
+    S.RETURN_RESULTS_TO_AI,
+    S.CONTINUE_OR_RETRY,
+    S.RUN_FINAL_TESTS,
+    S.GENERATE_COMPLETION_REPORT,
+    S.COMPLETED,
+]
 
 
 class TestStates(unittest.TestCase):
@@ -15,8 +37,12 @@ class TestStates(unittest.TestCase):
             check_transition(a, b)
 
     def test_cannot_skip_steps(self):
-        for a, b in ((S.RECEIVE_TASK, S.APPLY_CHANGES), (S.CREATE_PLAN, S.EXECUTE_COMMANDS),
-                     (S.GENERATE_CHANGES, S.APPLY_CHANGES), (S.RUN_FINAL_TESTS, S.COMPLETED)):
+        for a, b in (
+            (S.RECEIVE_TASK, S.APPLY_CHANGES),
+            (S.CREATE_PLAN, S.EXECUTE_COMMANDS),
+            (S.GENERATE_CHANGES, S.APPLY_CHANGES),
+            (S.RUN_FINAL_TESTS, S.COMPLETED),
+        ):
             with self.subTest(a=a, b=b), self.assertRaises(InvalidTransition):
                 check_transition(a, b)
 
@@ -50,8 +76,12 @@ class TestStates(unittest.TestCase):
 
     def test_no_self_transitions(self):
         for s in S:
-            self.assertNotIn(s, allowed_transitions(s, resume_state=S.CREATE_PLAN) if s in SUSPENDED
-                             else allowed_transitions(s))
+            self.assertNotIn(
+                s,
+                allowed_transitions(s, resume_state=S.CREATE_PLAN)
+                if s in SUSPENDED
+                else allowed_transitions(s),
+            )
 
     def test_partition(self):
         self.assertEqual(ACTIVE | SUSPENDED | TERMINAL, set(S))

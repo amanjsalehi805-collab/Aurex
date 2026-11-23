@@ -1,4 +1,3 @@
-import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -37,14 +36,16 @@ class TestJournal(unittest.TestCase):
         self.assertEqual(self.j.begin(*ARGS).decision, Decision.IN_PROGRESS)
 
     def test_crash_mid_run_becomes_unknown_and_is_never_auto_rerun(self):
-        self.j.begin(*ARGS)                      # command started, process dies before finish()
+        self.j.begin(*ARGS)  # command started, process dies before finish()
         self.j.close()
         reopened = ExecutionJournal(self.path)
         recovered = reopened.recover_interrupted()
         self.assertEqual([r.status for r in recovered], ["unknown"])
         self.assertIsNone(recovered[0].exit_code)
         self.assertEqual(reopened.begin(*ARGS).decision, Decision.NEEDS_REVIEW)
-        with self.assertRaises(JournalConflict):  # an unknown run can't be retroactively declared a success
+        with self.assertRaises(
+            JournalConflict
+        ):  # an unknown run can't be retroactively declared a success
             reopened.finish(K, "succeeded", 0)
         reopened.close()
         self.j = ExecutionJournal(self.path)
@@ -73,8 +74,15 @@ class TestJournal(unittest.TestCase):
 
     def test_invalid_outcomes_rejected(self):
         self.j.begin(*ARGS)
-        for status, code in (("succeeded", 1), ("succeeded", None), ("failed", 0), ("failed", None),
-                             ("unknown", 0), ("bogus", 0), ("started", None)):
+        for status, code in (
+            ("succeeded", 1),
+            ("succeeded", None),
+            ("failed", 0),
+            ("failed", None),
+            ("unknown", 0),
+            ("bogus", 0),
+            ("started", None),
+        ):
             with self.subTest(status=status, code=code), self.assertRaises(JournalConflict):
                 self.j.finish(K, status, code)
         self.assertEqual(self.j.begin(*ARGS).decision, Decision.IN_PROGRESS)  # still 'started'

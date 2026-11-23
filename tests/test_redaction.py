@@ -17,8 +17,16 @@ R = Redactor()
 
 class TestRedaction(unittest.TestCase):
     def test_each_secret_kind_is_redacted(self):
-        cases = {AWS: "aws_access_key_id", GH: "github_token", ANTH: "anthropic_key", OAI: "openai_key",
-                 SLACK: "slack_token", GOOG: "google_api_key", STRIPE: "stripe_key", JWT: "jwt"}
+        cases = {
+            AWS: "aws_access_key_id",
+            GH: "github_token",
+            ANTH: "anthropic_key",
+            OAI: "openai_key",
+            SLACK: "slack_token",
+            GOOG: "google_api_key",
+            STRIPE: "stripe_key",
+            JWT: "jwt",
+        }
         for secret, kind in cases.items():
             with self.subTest(kind=kind):
                 text = f"value is {secret} end"
@@ -40,8 +48,12 @@ class TestRedaction(unittest.TestCase):
         self.assertNotIn("abcdefghijklmnop", out)
 
     def test_assignments(self):
-        for line in ("DB_PASSWORD=supersecret123", 'api_key: "abcd1234efgh5678"', "export AUTH_TOKEN='tok_abcdefgh12'",
-                     "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"):
+        for line in (
+            "DB_PASSWORD=supersecret123",
+            'api_key: "abcd1234efgh5678"',
+            "export AUTH_TOKEN='tok_abcdefgh12'",
+            "aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        ):
             with self.subTest(line=line):
                 out = R.redact(line)
                 self.assertIn("[REDACTED:", out)
@@ -49,9 +61,17 @@ class TestRedaction(unittest.TestCase):
                 self.assertNotIn("abcd1234efgh5678", out)
 
     def test_no_false_positives_on_ordinary_code(self):
-        for line in ('author = "Jonathan Smith"', "max_tokens = 1000", "token_count: 12", "x = password_field",
-                     "def get_token(self): return self._value", "total = a + b", "Run `pytest -q` now",
-                     "https://example.com/path?q=1", "sha = 'deadbeef'"):
+        for line in (
+            'author = "Jonathan Smith"',
+            "max_tokens = 1000",
+            "token_count: 12",
+            "x = password_field",
+            "def get_token(self): return self._value",
+            "total = a + b",
+            "Run `pytest -q` now",
+            "https://example.com/path?q=1",
+            "sha = 'deadbeef'",
+        ):
             with self.subTest(line=line):
                 self.assertEqual(R.redact(line), line)
 
@@ -74,15 +94,22 @@ class TestRedaction(unittest.TestCase):
         self.assertEqual(R.redact("x " + OAI + " y"), "x [REDACTED:openai_key] y")
 
     def test_bearer_keeps_scheme_word_and_masks_only_the_token(self):
-        self.assertEqual(R.redact("Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456"),
-                         "Authorization: Bearer [REDACTED:bearer_token]")
+        self.assertEqual(
+            R.redact("Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456"),
+            "Authorization: Bearer [REDACTED:bearer_token]",
+        )
 
     def test_overlap_resolution_prefers_specific_kind(self):
         self.assertIn("[REDACTED:anthropic_key]", R.redact(ANTH))
 
     def test_redact_obj(self):
-        obj = {"password": "x", "note": f"key {GH}", "nested": [{"api_key": "abc"}, f"{AWS}"], "n": 5,
-               "ok": "hello"}
+        obj = {
+            "password": "x",
+            "note": f"key {GH}",
+            "nested": [{"api_key": "abc"}, f"{AWS}"],
+            "n": 5,
+            "ok": "hello",
+        }
         out = R.redact_obj(obj)
         self.assertEqual(out["password"], "[REDACTED:sensitive_key]")
         self.assertEqual(out["nested"][0]["api_key"], "[REDACTED:sensitive_key]")
@@ -91,8 +118,18 @@ class TestRedaction(unittest.TestCase):
         self.assertEqual((out["n"], out["ok"]), (5, "hello"))
 
     def test_sensitive_paths(self):
-        for p in (".env", "app/.env.production", "id_rsa", "keys/server.pem", ".ssh/config", "x/.aws/credentials",
-                  ".npmrc", "terraform.tfstate", "ID_ED25519", "a/b/secrets.json"):
+        for p in (
+            ".env",
+            "app/.env.production",
+            "id_rsa",
+            "keys/server.pem",
+            ".ssh/config",
+            "x/.aws/credentials",
+            ".npmrc",
+            "terraform.tfstate",
+            "ID_ED25519",
+            "a/b/secrets.json",
+        ):
             with self.subTest(p=p):
                 self.assertTrue(is_sensitive_path(p))
         for p in (".env.example", "src/main.py", "README.md", "environment.py", "docs/keys.md", ""):
